@@ -74,7 +74,7 @@ namespace vi_mt
 	{
 		static duration_t measurement_unit_aux(void(*burden)(now_t));
 
-		static inline auto vi_tmGetTicks()
+		[[nodiscard]] static inline auto vi_tmGetTicks()
 		{	return Func(Args...);
 		}
 
@@ -114,8 +114,8 @@ namespace vi_mt
 		using tick_t = std::invoke_result_t<decltype(vi_tmGetTicks)>;
 		auto get_pair = []
 		{	std::this_thread::yield(); // To minimize the likelihood of interrupting the flow between measurements.
-			vi_tmGetTicks(); // Preloading a function into cache
-			now(); // Preloading a function into cache
+			(void)vi_tmGetTicks(); // Preloading a function into cache
+			(void)now(); // Preloading a function into cache
 
 			auto next = vi_tmGetTicks();
 			for (const auto prev = vi_tmGetTicks(); prev >= next; )

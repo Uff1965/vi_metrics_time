@@ -403,7 +403,7 @@ namespace measure_functions
 			print_itm
 			(out,
 				m.name_,
-				to_string(discreteness(m), 3),
+				to_string(discreteness(m), 2),
 				to_string(m.call_duration_),
 				to_string(m.unit_of_currrentthread_work_),
 				type(m)
