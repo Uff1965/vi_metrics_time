@@ -45,6 +45,7 @@ namespace
 	strs_t g_include;
 	strs_t g_exclude;
 	strs_t g_tests;
+	int g_repeat = 1;
 
 	bool check_test(std::string_view s)
 	{
@@ -167,8 +168,7 @@ namespace
 				else if ("type"sv == ptr)
 					g_sort = sort_t::type;
 				else
-				{
-					std::cerr << "ERROR: Unknown value for parametr --sort: \'" << ptr << "\'\n";
+				{	std::cerr << "ERROR: Unknown value for parametr --sort: \'" << ptr << "\'\n";
 					std::exit(1);
 				}
 			}
@@ -198,12 +198,24 @@ namespace
 				if (n >= argc) continue;
 				g_tests.emplace_back(argv[n++]);
 			}
+			else if ("-r"sv == ptr || "--repeat"sv == ptr)
+			{
+				g_repeat = 5;
+				if (n >= argc) continue;
+				if ('-' == *argv[n]) continue;
+				ptr = argv[n++];
+
+				g_repeat = atoi(ptr);
+				if(g_repeat <= 0)
+				{	std::cerr << "ERROR: Wrong value for parametr --repeat: \'" << ptr << "\'\n";
+					std::exit(1);
+				}
+			}
 			else
 			{
 				auto error = false;
-				if ("-h"sv == ptr && "--help"sv == ptr)
-				{
-					std::cerr << "ERROR: Unknown parameter \'" << ptr << "\'\n";
+				if ("-h"sv != ptr && "--help"sv != ptr)
+				{	std::cerr << "ERROR: Unknown parameter \'" << ptr << "\'\n";
 					error = true;
 				}
 
@@ -213,7 +225,8 @@ namespace
 					"-[-s]sort name|discreteness|duration|tick|type: by default - discreteness;\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
-					"-[-t]est <name>: execute test name;\n";
+					"-[-t]est <name>: execute test name;\n"
+					"-[-r]epeat <N>: number of measurements. 5 by default;\n";
 
 				std::exit(error ? EXIT_FAILURE : EXIT_SUCCESS);
 			}
@@ -343,6 +356,38 @@ namespace
 
 namespace measure_functions
 {
+	class one_t
+	{
+		vi_mt::duration_t sum_{};
+		double squares_sum_{};
+		std::size_t cnt_{};
+	public:
+		void add(vi_mt::duration_t d);
+		[[nodiscard]] vi_mt::duration_t average() const;
+		[[nodiscard]] double std_deviation() const;
+	};
+
+	void one_t::add(vi_mt::duration_t d)
+	{	++cnt_;
+		sum_ += d;
+		squares_sum_ += std::pow(d.count(), 2.0);
+	}
+
+	vi_mt::duration_t one_t::average() const
+	{	assert(cnt_);
+		return cnt_ ? sum_ / cnt_ : vi_mt::duration_t{};
+	}
+
+	double one_t::std_deviation() const
+	{	assert(cnt_);
+		double result = 0.0;
+		if (cnt_)
+		{	result = std::sqrt(cnt_ * squares_sum_ / std::pow(sum_.count(), 2) - 1) * 100.0;
+		}
+
+		return result;
+	}
+
 	std::ostream& print_itm(std::ostream& out, std::string_view name, std::string_view disc, std::string_view durn, std::string_view val, std::string_view val_sleep)
 	{
 		return out << std::left << std::setfill('.')
@@ -412,6 +457,19 @@ namespace measure_functions
 		return out;
 	}
 
+	std::vector<vi_mt::item_t> measurement(const strs_t& inc, const strs_t& exc) {
+		auto filter = [&inc, &exc](std::string_view s)
+			{
+				auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
+				if (std::any_of(exc.begin(), exc.end(), pred))
+					return false;
+				return inc.empty() || std::any_of(inc.begin(), inc.end(), pred);
+			};
+
+		progress_t progress{ "Collecting function properties" };
+		return vi_mt::metric_base_t::action(filter, [&progress](double f) { progress(f); });
+	}
+
 	std::vector<vi_mt::item_t> prepare(std::vector<vi_mt::item_t>&& data)
 	{
 		auto pred = less<sort_t::discreteness>;
@@ -436,20 +494,7 @@ namespace measure_functions
 		return result;
 	}
 
-	std::vector<vi_mt::item_t> measurement(const strs_t& inc, const strs_t& exc) {
-		auto filter = [&inc, &exc](std::string_view s)
-			{
-				auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
-				if (std::any_of(exc.begin(), exc.end(), pred))
-					return false;
-				return inc.empty() || std::any_of(inc.begin(), inc.end(), pred);
-			};
-
-		progress_t progress{ "Collecting function properties" };
-		return vi_mt::metric_base_t::action(filter, [&progress](double f) { progress(f); });
-	}
-
-	void measure_functions()
+	void work()
 	{
 		warming();
 		const auto data = prepare(measurement(g_include, g_exclude));
@@ -459,6 +504,10 @@ namespace measure_functions
 
 int main(int argc, char* argv[])
 {
+	struct space_out : std::numpunct<char>
+	{	char do_thousands_sep() const override { return '\''; }  // separate with spaces
+		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
+	};
 	std::cout.imbue(std::locale(std::cout.getloc(), new space_out));
 
 	params(argc, argv);
@@ -469,7 +518,7 @@ int main(int argc, char* argv[])
 	if (check_test("functions"sv))
 	{
 		endl(std::cout);
-		measure_functions::measure_functions();
+		measure_functions::work();
 	}
 
 	endl(std::cout);

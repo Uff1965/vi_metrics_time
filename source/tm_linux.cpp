@@ -16,7 +16,7 @@
 
 #define METRIC(title, ...) TM_METRIC(("<LNX>::" title), __VA_ARGS__)
 
-namespace vit_tm
+namespace vi_mt
 {
 	count_t tm_gettimeofday()
 	{
@@ -134,4 +134,4 @@ namespace vit_tm
 	}
 	METRIC("getrusage(RUSAGE_THREAD)", tm_getrusage_RUSAGE_THREAD);
 
-} // namespace vit_tm
+} // namespace vi_mt
