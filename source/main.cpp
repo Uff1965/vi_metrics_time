@@ -241,7 +241,7 @@ namespace
 			{
 				timespec ts;
 				::clock_getres(clk_id, &ts);
-				return vi_mt::duration_t{ ts.tv_sec + 1e-9 * ts.tv_nsec };
+				return misc::duration_t{ ts.tv_sec + 1e-9 * ts.tv_nsec };
 			};
 
 			std::cout
@@ -382,9 +382,8 @@ namespace measure_functions
 			auto prn_sd = [](double f)
 			{
 				std::string result = "<err>";
-				if (!isnan(f))
-				{
-					std::ostringstream os;
+				if (!std::isnan(f))
+				{	std::ostringstream os;
 					os << std::setprecision(1) << std::fixed << misc::round(f, 2);
 					result = os.str() + "%";
 				}
