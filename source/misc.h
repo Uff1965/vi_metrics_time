@@ -22,10 +22,11 @@ namespace misc
 		//constexpr duration_t(T&& v) : ch::duration<double>{ std::forward<T>(v) } {}
 		using ch::duration<double>::duration;
 
-		friend std::string to_string(duration_t sec, unsigned char precision = 2, unsigned char dec = 1);
 		friend bool operator<(duration_t l, duration_t r);
-		friend inline std::ostream& operator<<(std::ostream& os, const duration_t& d) { return os << to_string(d); }
 	};
+
+	std::string to_string(duration_t sec, unsigned char precision = 2, unsigned char dec = 1);
+	inline std::ostream& operator<<(std::ostream& os, const duration_t& d) { return os << misc::to_string(d); }
 
 	class progress_t
 	{

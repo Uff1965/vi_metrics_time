@@ -38,7 +38,7 @@ namespace
 } // namespace
 
 bool misc::operator < (misc::duration_t l, misc::duration_t r)
-{	return l.count() < r.count() && misc::to_string(l, 2, 1) != misc::to_string(r, 2, 1);
+{	return l.count() < r.count() && to_string(l, 2, 1) != to_string(r, 2, 1);
 }
 
 double misc::round(double num, unsigned char prec, unsigned char dec)
@@ -126,8 +126,8 @@ const auto unit_test_round = []
 	}();
 #endif // #ifndef NDEBUG
 
-std::string misc::to_string(misc::duration_t sec, unsigned char precision, unsigned char dec)
-{	sec = duration_t{ round(sec.count(), precision, dec) };
+std::string misc::to_string(duration_t sec, unsigned char precision, unsigned char dec)
+{	sec = misc::duration_t{ round(sec.count(), precision, dec) };
 
 	struct { std::string_view suffix_; double factor_{}; } k;
 	if (10_ps > sec) { k = { "ps"sv, 1.0 }; }
