@@ -7,6 +7,7 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <ostream>
 #include <string>
