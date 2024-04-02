@@ -29,7 +29,7 @@
 #	include <winternl.h> // for NtQueryTimerResolution
 #else
 #	include <sys/time.h> // for clock_getres(...)
-#	include <sys/times.h> // for _SC_CLK_TCK
+#	include <unistd.h> // for _SC_CLK_TCK
 #endif
 
 using namespace std::literals;
