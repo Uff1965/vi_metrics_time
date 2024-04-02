@@ -19,13 +19,14 @@ vi_macro_show(VI_SOURCE_DIR)
 
 ### Files #####################################################################
 set(FILE_GROUP
+  "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Linux>:tm_linux.cpp>"
+  "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Windows>:tm_wintel.cpp>"
   "${VI_SOURCE_DIR}/header.h"
   "${VI_SOURCE_DIR}/main.cpp"
   "${VI_SOURCE_DIR}/misc.cpp"
+  "${VI_SOURCE_DIR}/misc.h"
   "${VI_SOURCE_DIR}/tm_asm.cpp"
   "${VI_SOURCE_DIR}/tm_standard.cpp"
-  "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Windows>:tm_wintel.cpp>"
-  "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Linux>:tm_linux.cpp>"
 )
 source_group("Source Files" FILES ${FILE_GROUP})
 list(APPEND SOURCE_FILES ${FILE_GROUP})

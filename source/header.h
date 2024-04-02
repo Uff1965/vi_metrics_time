@@ -2,6 +2,8 @@
 #	define TESTS_METRICS_HEADER_H_ 1.0
 #	pragma once
 
+#include "misc.h"
+
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -28,35 +30,17 @@ namespace vi_mt
 	namespace ch = std::chrono;
 	using count_t = std::uint64_t;
 
-	struct duration_t : ch::duration<double> // A new type is defined to be able to overload the 'operator<'.
-	{
-		using base_t = ch::duration<double>;
-		constexpr explicit duration_t(const base_t& r) : base_t{ r } {}
-		using base_t::base_t;
-
-		template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-		[[nodiscard]] friend constexpr duration_t operator*(const duration_t& d, T f) { return duration_t{ d.count() * f }; }
-		template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-		[[nodiscard]] friend constexpr duration_t operator*(T f, const duration_t& d) { return d * f; }
-		[[nodiscard]] friend constexpr double operator/(const duration_t& l, const duration_t& r) { return l.count() / r.count(); };
-		template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-		[[nodiscard]] friend constexpr duration_t operator/(const duration_t& d, T f) { return duration_t{ d.count() / f }; }
-	};
-
-	[[nodiscard]] std::string to_string(duration_t sec, unsigned char precision = 2, unsigned char dec = 1);
-	[[nodiscard]] inline bool operator<(duration_t l, duration_t r) { return l.count() < r.count() && to_string(l) != to_string(r); }
-	inline std::ostream& operator<<(std::ostream& os, const duration_t& d) { return os << to_string(d); }
 	[[nodiscard]] inline auto now() { return ch::high_resolution_clock::now(); }
 	using now_t = decltype(now());
 
 	struct item_t
 	{
 		std::string name_;
-		duration_t call_duration_{}; // Duration of the Function call.
+		misc::duration_t call_duration_; // Duration of the Function call.
 		double discreteness_{}; // Average tick growth.
-		duration_t unit_of_sleeping_process_{}; // Duration of one tick in a sleeping process.
-		duration_t unit_of_currrentthread_work_{}; // Duration of one tick when loading current thread.
-		duration_t unit_of_allthreads_work_{}; // Duration of one tick when loading multiple threads.
+		misc::duration_t unit_of_sleeping_process_; // Duration of one tick in a sleeping process.
+		misc::duration_t unit_of_currrentthread_work_; // Duration of one tick when loading current thread.
+		misc::duration_t unit_of_allthreads_work_; // Duration of one tick when loading multiple threads.
 	};
 
 	struct metric_base_t
@@ -72,17 +56,17 @@ namespace vi_mt
 	template<const char* Name, auto Func, auto... Args>
 	class metric_t: protected metric_base_t
 	{
-		static duration_t measurement_unit_aux(void(*burden)(now_t));
+		static misc::duration_t measurement_unit_aux(void(*burden)(now_t));
 
 		[[nodiscard]] static inline auto vi_tmGetTicks()
 		{	return Func(Args...);
 		}
 
-		static duration_t measurement_call_duration();
+		static misc::duration_t measurement_call_duration();
 		static double measurement_discreteness();
-		static duration_t measurement_unit_process_sleep();
-		static duration_t measurement_unit_one_thread_work();
-		static duration_t measurement_unit_all_threads_work();
+		static misc::duration_t measurement_unit_process_sleep();
+		static misc::duration_t measurement_unit_one_thread_work();
+		static misc::duration_t measurement_unit_all_threads_work();
 
 		std::string_view name() const override { return Name; }
 		item_t measurement(const std::function<void(double)> &pb) const override;
@@ -109,7 +93,7 @@ namespace vi_mt
 	}
 
 	template<const char* Name, auto Func, auto... Args>
-	duration_t metric_t<Name, Func, Args...>::measurement_unit_aux(void(*burden)(now_t))
+	misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_aux(void(*burden)(now_t))
 	{
 		using tick_t = std::invoke_result_t<decltype(vi_tmGetTicks)>;
 		auto get_pair = []
@@ -133,11 +117,11 @@ namespace vi_mt
 			std::tie(tick_e, time_e) = get_pair();
 		} while (tick_e - tick_b < 5); // For functions with resolution worse than 512ms. For example, for the function time()..
 
-		return duration_t{ time_e - time_b } / (tick_e - tick_b);
+		return misc::duration_t{ time_e - time_b } / (tick_e - tick_b);
 	}
 
 	template<const char* Name, auto Func, auto... Args>
-	inline duration_t metric_t<Name, Func, Args...>::measurement_unit_process_sleep()
+	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_process_sleep()
 	{	const auto result = measurement_unit_aux([](auto limit) {std::this_thread::sleep_until(limit); });
 
 		// Naive are trying to wake up the processor core after Sleep.
@@ -149,12 +133,12 @@ namespace vi_mt
 	}
 
 	template<const char* Name, auto Func, auto... Args>
-	inline duration_t metric_t<Name, Func, Args...>::measurement_unit_one_thread_work()
+	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_one_thread_work()
 	{	return measurement_unit_aux([](auto limit) { while (now() < limit) {/**/} });
 	}
 
 	template<const char* Name, auto Func, auto... Args>
-	inline duration_t metric_t<Name, Func, Args...>::measurement_unit_all_threads_work()
+	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_all_threads_work()
 	{
 		auto allthreads_load = [](auto limit) {
 			static const auto cnt = (std::thread::hardware_concurrency() > 1) ? (std::thread::hardware_concurrency() - 1) : 0;
@@ -174,7 +158,7 @@ namespace vi_mt
 	}
 
 	template<const char* Name, auto Func, auto... Args>
-	inline duration_t metric_t<Name, Func, Args...>::measurement_call_duration()
+	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_call_duration()
 	{
 		static constexpr auto CNT = 100U;
 		volatile std::invoke_result_t<decltype(vi_tmGetTicks)> _;
@@ -213,12 +197,14 @@ namespace vi_mt
 
 		assert(diff2 > diff1);
 		const auto diff = diff2 - diff1;
-		return duration_t{ std::max(decltype(diff){0}, diff) / static_cast<double>(CNT * CNT_EXT) };
+		return misc::duration_t{ std::max(decltype(diff){0}, diff) / static_cast<double>(CNT * CNT_EXT) };
 	}
 
 	template<const char* Name, auto Func, auto... Args>
 	inline item_t metric_t<Name, Func, Args...>::measurement(const std::function<void(double)>& progress) const
 	{
+		misc::warming(false, ch::seconds{ 1 }, true);
+
 		item_t result{ Name };
 		[[maybe_unused]] volatile auto _ = vi_tmGetTicks(); // A naive attempt to load the function code into the processor cache before starting measurements.
 		result.call_duration_ = measurement_call_duration();
