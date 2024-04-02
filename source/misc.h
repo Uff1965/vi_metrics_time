@@ -18,8 +18,8 @@ namespace misc
 
 	struct duration_t : ch::duration<double> // A new type is defined to be able to overload the 'operator<'.
 	{
-		//template<typename T>
-		//constexpr duration_t(T&& v) : ch::duration<double>{ std::forward<T>(v) } {}
+		template<typename T>
+		constexpr duration_t(T&& v) : ch::duration<double>{ std::forward<T>(v) } {}
 		using ch::duration<double>::duration;
 
 		friend bool operator<(duration_t l, duration_t r);
