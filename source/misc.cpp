@@ -12,6 +12,7 @@
 #	include <unistd.h> // for isatty(...)
 #endif
 
+#include <atomic>
 #include <cassert>
 #include <cmath>
 #include <iomanip>
@@ -26,8 +27,7 @@ namespace ch = std::chrono;
 using namespace std::literals;
 
 namespace
-{
-	constexpr auto operator""_ps(long double v) noexcept { return ch::duration<double, std::pico>(v); };
+{	constexpr auto operator""_ps(long double v) noexcept { return ch::duration<double, std::pico>(v); };
 	constexpr auto operator""_ps(unsigned long long v) noexcept { return ch::duration<double, std::pico>(v); };
 	constexpr auto operator""_ks(long double v) noexcept { return ch::duration<double, std::kilo>(v); };
 	constexpr auto operator""_ks(unsigned long long v) noexcept { return ch::duration<double, std::kilo>(v); };
@@ -35,7 +35,7 @@ namespace
 	constexpr auto operator""_Ms(unsigned long long v) noexcept { return ch::duration<double, std::mega>(v); };
 	constexpr auto operator""_Gs(long double v) noexcept { return ch::duration<double, std::giga>(v); };
 	constexpr auto operator""_Gs(unsigned long long v) noexcept { return ch::duration<double, std::giga>(v); };
-} // namespace
+}
 
 bool misc::operator < (misc::duration_t l, misc::duration_t r)
 {	return l.count() < r.count() && to_string(l, 2, 1) != to_string(r, 2, 1);
@@ -47,16 +47,13 @@ double misc::round(double num, unsigned char prec, unsigned char dec)
 
 	double result = num;
 	if (num >= 0 && prec > dec && prec <= 3 + dec)
-	{
-		auto power = static_cast<signed char>(std::floor(std::log10(num)));
+	{	auto power = static_cast<signed char>(std::floor(std::log10(num)));
 		auto t = 1U + (3 + power % 3) % 3;
 		if (prec > t)
-		{
-			t += std::min(dec, static_cast<unsigned char>(prec - t));
+		{	t += std::min(dec, static_cast<unsigned char>(prec - t));
 		}
 		else
-		{
-			t = prec;
+		{	t = prec;
 		}
 		power -= t - 1;
 
@@ -147,139 +144,139 @@ std::string misc::to_string(duration_t sec, unsigned char precision, unsigned ch
 
 #ifndef NDEBUG
 const auto unit_test_to_string = []
+{
+	struct
 	{
-		struct
-		{
-			int line_;
-			misc::duration_t sec_;
-			std::string_view res_;
-			unsigned char precision_{ 2 };
-			unsigned char dec_{ 1 };
-		}
-		static constexpr samples[] =
-		{
-			{__LINE__, 0s, "0.0ps"},
-			{__LINE__, 0.01234567891s, "12.346ms", 6, 3},
-			{__LINE__, 0.01234567891s, "12.35ms", 5, 2},
-			{__LINE__, 0.1_ps, "0.0ps"},
-			{__LINE__, 1_ps, "0.0ps"}, // The lower limit of accuracy is 10ps.
-			{__LINE__, 10.01ms, "10.0ms"},
-			{__LINE__, 10.1ms, "10.0ms"},
-			{__LINE__, 10_ps, "10.0ps"},
-			{__LINE__, 100_ps, "100.0ps"},
-			{__LINE__, 100ms, "100.0ms"},
-			{__LINE__, 100ns, "100.0ns"},
-			{__LINE__, 100s, "100.0s "},
-			{__LINE__, 100us, "100.0us"},
-			{__LINE__, 10ms, "10.0ms"},
-			{__LINE__, 10ns, "10.0ns"},
-			{__LINE__, 10s, "10.0s "},
-			{__LINE__, 10us, "10.0us"},
-			{__LINE__, 12.34567891s, "12.346s ", 6, 3},
-			{__LINE__, 12.34567891s, "12.35s ", 5, 2},
-			{__LINE__, 123.456789_ks, "123.457ks", 6, 3},
-			{__LINE__, 123.4ns, "100ns", 1, 0},
-			{__LINE__, 123.4ns, "120.0ns", 2, 1},
-			{__LINE__, 123.4ns, "120.0ns", 2},
-			{__LINE__, 123.4ns, "123.00ns", 3, 2},
-			{__LINE__, 123.4ns, "123.0ns", 3},
-			{__LINE__, 123.4ns, "123.40ns", 4, 2},
-			{__LINE__, 123.4ns, "123.4ns", 4},
-			{__LINE__, 1234.56789_ks, "1.2Ms", 3, 1},
-			{__LINE__, 1h, "3.6ks"},
-			{__LINE__, 1min, "60.0s "},
-			{__LINE__, 1ms, "1.0ms"},
-			{__LINE__, 1ns, "1.0ns"},
-			{__LINE__, 1s, "1.0s "},
-			{__LINE__, 1us, "1.0us"},
-			{__LINE__, 4.499999999999ns, "4.50ns", 3, 2},
-			{__LINE__, 4.499999999999ns, "4.50ns", 4, 2},
-			{__LINE__, 4.499999999999ns, "4.5ns", 2, 1},
-			{__LINE__, 4.499999999999ns, "4.5ns", 2},
-			{__LINE__, 4.499999999999ns, "4.5ns", 3},
-			{__LINE__, 4.499999999999ns, "4.5ns", 4},
-			{__LINE__, 4.499999999999ns, "4ns", 1, 0},
-			{__LINE__, 4.999999999999_ps, "0.00ps", 3, 2},
-			{__LINE__, 4.999999999999_ps, "0.00ps", 4, 2},
-			{__LINE__, 4.999999999999_ps, "0.0ps", 2, 1},
-			{__LINE__, 4.999999999999_ps, "0.0ps", 2},
-			{__LINE__, 4.999999999999_ps, "0.0ps", 3},
-			{__LINE__, 4.999999999999_ps, "0.0ps", 4},
-			{__LINE__, 4.999999999999_ps, "0ps", 1, 0},
-			{__LINE__, 4.999999999999ns, "5.00ns", 3, 2},
-			{__LINE__, 4.999999999999ns, "5.00ns", 4, 2},
-			{__LINE__, 4.999999999999ns, "5.0ns", 2, 1},
-			{__LINE__, 4.999999999999ns, "5.0ns", 2},
-			{__LINE__, 4.999999999999ns, "5.0ns", 3},
-			{__LINE__, 4.999999999999ns, "5.0ns", 4},
-			{__LINE__, 4.999999999999ns, "5ns", 1, 0},
-			{__LINE__, 5.000000000000_ps, "0.00ps", 3, 2},
-			{__LINE__, 5.000000000000_ps, "0.00ps", 4, 2},
-			{__LINE__, 5.000000000000_ps, "0.0ps", 2},
-			{__LINE__, 5.000000000000_ps, "0.0ps", 3},
-			{__LINE__, 5.000000000000_ps, "0.0ps", 4},
-			{__LINE__, 5.000000000000_ps, "0ps", 1, 0},
-			{__LINE__, 5.000000000000ns, "5.00ns", 3, 2},
-			{__LINE__, 5.000000000000ns, "5.00ns", 4, 2},
-			{__LINE__, 5.000000000000ns, "5.0ns", 2, 1},
-			{__LINE__, 5.000000000000ns, "5.0ns", 2},
-			{__LINE__, 5.000000000000ns, "5.0ns", 3},
-			{__LINE__, 5.000000000000ns, "5.0ns", 4},
-			{__LINE__, 5.000000000000ns, "5ns", 1, 0},
-			//**********************************
-			{__LINE__, 0.0_ps, "0.0ps"},
-			{__LINE__, 0.123456789us, "123.5ns", 4},
-			{__LINE__, 1.23456789s, "1s ", 1, 0},
-			{__LINE__, 1.23456789s, "1.2s ", 3},
-			{__LINE__, 1.23456789s, "1.2s "},
-			{__LINE__, 1.23456789us, "1.2us"},
-			{__LINE__, 1004.4ns, "1.0us", 2},
-			{__LINE__, 12.3456789s, "10s ", 1, 0},
-			{__LINE__, 12.3456789s, "12.3s ", 3},
-			{__LINE__, 12.3456789us, "12.3us", 3},
-			{__LINE__, 12.3456s, "12.0s "},
-			{__LINE__, 12.34999999ms, "10ms", 1, 0},
-			{__LINE__, 12.34999999ms, "12.3ms", 3},
-			{__LINE__, 12.34999999ms, "12.3ms", 4},
-			{__LINE__, 12.4999999ms, "12.0ms"},
-			{__LINE__, 12.4999999ms, "12.5ms", 3},
-			{__LINE__, 12.5000000ms, "13.0ms"},
-			{__LINE__, 123.456789ms, "123.0ms", 3},
-			{__LINE__, 123.456789us, "120.0us"},
-			{__LINE__, 123.4999999ms, "123.5ms", 4},
-			{__LINE__, 1234.56789us, "1.2ms"},
-			{__LINE__, 245.0_ps, "250.0ps"},
-			{__LINE__, 49.999_ps, "50.0ps"},
-			{__LINE__, 50.0_ps, "50.0ps"},
-			{__LINE__, 9.49999_ps, "0.0ps"},
-			{__LINE__, 9.9999_ps, "10.0ps"}, // The lower limit of accuracy is 10ps.
-			{__LINE__, 9.999ns, "10.0ns"},
-			{__LINE__, 99.49999_ps, "99.0ps"},
-			{__LINE__, 99.4999ns, "99.0ns"},
-			{__LINE__, 99.4ms, "99.0ms"},
-			{__LINE__, 99.5_ps, "100.0ps"},
-			{__LINE__, 99.5ms, "100.0ms"},
-			{__LINE__, 99.5ns, "100.0ns"},
-			{__LINE__, 99.5us, "100.0us"},
-			{__LINE__, 99.999_ps, "100.0ps"},
-			{__LINE__, 999.0_ps, "1.0ns"},
-			{__LINE__, 999.45ns, "1us", 1, 0},
-			{__LINE__, 999.45ns, "1.0us", 2},
-			{__LINE__, 999.45ns, "999.0ns", 3},
-			{__LINE__, 999.45ns, "999.5ns", 4},
-			{__LINE__, 999.45ns, "999.45ns", 5, 2},
-			{__LINE__, 999.55ns, "1.0us", 3},
-			{__LINE__, 99ms, "99.0ms"},
-		};
+		int line_;
+		misc::duration_t sec_;
+		std::string_view res_;
+		unsigned char precision_{ 2 };
+		unsigned char dec_{ 1 };
+	}
+	static constexpr samples[] =
+	{
+		{__LINE__, 0s, "0.0ps"},
+		{__LINE__, 0.01234567891s, "12.346ms", 6, 3},
+		{__LINE__, 0.01234567891s, "12.35ms", 5, 2},
+		{__LINE__, 0.1_ps, "0.0ps"},
+		{__LINE__, 1_ps, "0.0ps"}, // The lower limit of accuracy is 10ps.
+		{__LINE__, 10.01ms, "10.0ms"},
+		{__LINE__, 10.1ms, "10.0ms"},
+		{__LINE__, 10_ps, "10.0ps"},
+		{__LINE__, 100_ps, "100.0ps"},
+		{__LINE__, 100ms, "100.0ms"},
+		{__LINE__, 100ns, "100.0ns"},
+		{__LINE__, 100s, "100.0s "},
+		{__LINE__, 100us, "100.0us"},
+		{__LINE__, 10ms, "10.0ms"},
+		{__LINE__, 10ns, "10.0ns"},
+		{__LINE__, 10s, "10.0s "},
+		{__LINE__, 10us, "10.0us"},
+		{__LINE__, 12.34567891s, "12.346s ", 6, 3},
+		{__LINE__, 12.34567891s, "12.35s ", 5, 2},
+		{__LINE__, 123.456789_ks, "123.457ks", 6, 3},
+		{__LINE__, 123.4ns, "100ns", 1, 0},
+		{__LINE__, 123.4ns, "120.0ns", 2, 1},
+		{__LINE__, 123.4ns, "120.0ns", 2},
+		{__LINE__, 123.4ns, "123.00ns", 3, 2},
+		{__LINE__, 123.4ns, "123.0ns", 3},
+		{__LINE__, 123.4ns, "123.40ns", 4, 2},
+		{__LINE__, 123.4ns, "123.4ns", 4},
+		{__LINE__, 1234.56789_ks, "1.2Ms", 3, 1},
+		{__LINE__, 1h, "3.6ks"},
+		{__LINE__, 1min, "60.0s "},
+		{__LINE__, 1ms, "1.0ms"},
+		{__LINE__, 1ns, "1.0ns"},
+		{__LINE__, 1s, "1.0s "},
+		{__LINE__, 1us, "1.0us"},
+		{__LINE__, 4.499999999999ns, "4.50ns", 3, 2},
+		{__LINE__, 4.499999999999ns, "4.50ns", 4, 2},
+		{__LINE__, 4.499999999999ns, "4.5ns", 2, 1},
+		{__LINE__, 4.499999999999ns, "4.5ns", 2},
+		{__LINE__, 4.499999999999ns, "4.5ns", 3},
+		{__LINE__, 4.499999999999ns, "4.5ns", 4},
+		{__LINE__, 4.499999999999ns, "4ns", 1, 0},
+		{__LINE__, 4.999999999999_ps, "0.00ps", 3, 2},
+		{__LINE__, 4.999999999999_ps, "0.00ps", 4, 2},
+		{__LINE__, 4.999999999999_ps, "0.0ps", 2, 1},
+		{__LINE__, 4.999999999999_ps, "0.0ps", 2},
+		{__LINE__, 4.999999999999_ps, "0.0ps", 3},
+		{__LINE__, 4.999999999999_ps, "0.0ps", 4},
+		{__LINE__, 4.999999999999_ps, "0ps", 1, 0},
+		{__LINE__, 4.999999999999ns, "5.00ns", 3, 2},
+		{__LINE__, 4.999999999999ns, "5.00ns", 4, 2},
+		{__LINE__, 4.999999999999ns, "5.0ns", 2, 1},
+		{__LINE__, 4.999999999999ns, "5.0ns", 2},
+		{__LINE__, 4.999999999999ns, "5.0ns", 3},
+		{__LINE__, 4.999999999999ns, "5.0ns", 4},
+		{__LINE__, 4.999999999999ns, "5ns", 1, 0},
+		{__LINE__, 5.000000000000_ps, "0.00ps", 3, 2},
+		{__LINE__, 5.000000000000_ps, "0.00ps", 4, 2},
+		{__LINE__, 5.000000000000_ps, "0.0ps", 2},
+		{__LINE__, 5.000000000000_ps, "0.0ps", 3},
+		{__LINE__, 5.000000000000_ps, "0.0ps", 4},
+		{__LINE__, 5.000000000000_ps, "0ps", 1, 0},
+		{__LINE__, 5.000000000000ns, "5.00ns", 3, 2},
+		{__LINE__, 5.000000000000ns, "5.00ns", 4, 2},
+		{__LINE__, 5.000000000000ns, "5.0ns", 2, 1},
+		{__LINE__, 5.000000000000ns, "5.0ns", 2},
+		{__LINE__, 5.000000000000ns, "5.0ns", 3},
+		{__LINE__, 5.000000000000ns, "5.0ns", 4},
+		{__LINE__, 5.000000000000ns, "5ns", 1, 0},
+		//**********************************
+		{__LINE__, 0.0_ps, "0.0ps"},
+		{__LINE__, 0.123456789us, "123.5ns", 4},
+		{__LINE__, 1.23456789s, "1s ", 1, 0},
+		{__LINE__, 1.23456789s, "1.2s ", 3},
+		{__LINE__, 1.23456789s, "1.2s "},
+		{__LINE__, 1.23456789us, "1.2us"},
+		{__LINE__, 1004.4ns, "1.0us", 2},
+		{__LINE__, 12.3456789s, "10s ", 1, 0},
+		{__LINE__, 12.3456789s, "12.3s ", 3},
+		{__LINE__, 12.3456789us, "12.3us", 3},
+		{__LINE__, 12.3456s, "12.0s "},
+		{__LINE__, 12.34999999ms, "10ms", 1, 0},
+		{__LINE__, 12.34999999ms, "12.3ms", 3},
+		{__LINE__, 12.34999999ms, "12.3ms", 4},
+		{__LINE__, 12.4999999ms, "12.0ms"},
+		{__LINE__, 12.4999999ms, "12.5ms", 3},
+		{__LINE__, 12.5000000ms, "13.0ms"},
+		{__LINE__, 123.456789ms, "123.0ms", 3},
+		{__LINE__, 123.456789us, "120.0us"},
+		{__LINE__, 123.4999999ms, "123.5ms", 4},
+		{__LINE__, 1234.56789us, "1.2ms"},
+		{__LINE__, 245.0_ps, "250.0ps"},
+		{__LINE__, 49.999_ps, "50.0ps"},
+		{__LINE__, 50.0_ps, "50.0ps"},
+		{__LINE__, 9.49999_ps, "0.0ps"},
+		{__LINE__, 9.9999_ps, "10.0ps"}, // The lower limit of accuracy is 10ps.
+		{__LINE__, 9.999ns, "10.0ns"},
+		{__LINE__, 99.49999_ps, "99.0ps"},
+		{__LINE__, 99.4999ns, "99.0ns"},
+		{__LINE__, 99.4ms, "99.0ms"},
+		{__LINE__, 99.5_ps, "100.0ps"},
+		{__LINE__, 99.5ms, "100.0ms"},
+		{__LINE__, 99.5ns, "100.0ns"},
+		{__LINE__, 99.5us, "100.0us"},
+		{__LINE__, 99.999_ps, "100.0ps"},
+		{__LINE__, 999.0_ps, "1.0ns"},
+		{__LINE__, 999.45ns, "1us", 1, 0},
+		{__LINE__, 999.45ns, "1.0us", 2},
+		{__LINE__, 999.45ns, "999.0ns", 3},
+		{__LINE__, 999.45ns, "999.5ns", 4},
+		{__LINE__, 999.45ns, "999.45ns", 5, 2},
+		{__LINE__, 999.55ns, "1.0us", 3},
+		{__LINE__, 99ms, "99.0ms"},
+	};
 
-		for (auto& i : samples)
-		{
-			const auto str = misc::to_string(i.sec_, i.precision_, i.dec_);
-			assert(i.res_ == str);
-		}
+	for (auto& i : samples)
+	{
+		const auto str = misc::to_string(i.sec_, i.precision_, i.dec_);
+		assert(i.res_ == str);
+	}
 
-		return 0;
-	}();
+	return 0;
+}();
 #endif // #ifndef NDEBUG
 
 void misc::progress_t::print(double f) const
@@ -293,8 +290,7 @@ void misc::progress_t::print(double f) const
 	if (is_atty(stdout))
 	{
 		if (!std::isnan(f))
-		{
-			std::cout << "\r" << title_ << "... " << std::fixed << std::setprecision(1) << std::setw(3) << 100.0 * f << '%';
+		{	std::cout << "\r" << title_ << "... " << std::fixed << std::setprecision(1) << std::setw(3) << 100.0 * f << '%';
 		}
 		else
 		{	// std::isnan(f) - Call from the destructor.
@@ -320,8 +316,7 @@ void misc::progress_t::print(double f) const
 void misc::warming(bool all, ch::milliseconds d, bool silent)
 {
 	if (0 != d.count())
-	{
-		std::unique_ptr<progress_t> progress{ silent ? nullptr : new progress_t{ "Warming" } };
+	{	std::unique_ptr<progress_t> progress{ silent ? nullptr : new progress_t{ "Warming" } };
 
 		std::atomic_bool done = false;
 		const auto cnt = (all && std::thread::hardware_concurrency() > 1) ?

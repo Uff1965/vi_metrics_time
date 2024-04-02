@@ -2,7 +2,6 @@
 #	define VI_METRICS_TIME_SOURCE_MISC_H_
 #	pragma once
 
-#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <iosfwd>
