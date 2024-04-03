@@ -11,7 +11,9 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <numeric>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -20,6 +22,7 @@
 #include <vector>
 
 #include <stdio.h> // for fileno(...)
+#include <time.h>
 #if _WIN32
 #	define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #	define NOMINMAX
@@ -37,8 +40,14 @@ namespace ch = std::chrono;
 
 namespace
 {
+#ifdef NDEBUG
+	constexpr char BUILD_TYPE[] = "Release";
+#else
+	constexpr char BUILD_TYPE[] = "Debug";
+#endif
+
 	using strs_t = std::vector<std::string>;
-	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, _quantity };
+	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, nosort, _quantity };
 
 	auto g_sort = sort_t::discreteness;
 	auto g_warming = 1'000ms;
@@ -82,6 +91,8 @@ namespace
 					g_sort = sort_t::tick;
 				else if ("type"sv == ptr)
 					g_sort = sort_t::type;
+				else if ("nosort"sv == ptr)
+					g_sort = sort_t::nosort;
 				else
 				{	std::cerr << "ERROR: Unknown value for parametr --sort: \'" << ptr << "\'\n";
 					std::exit(1);
@@ -132,7 +143,7 @@ namespace
 				std::cout << "\nOptions:\n" <<
 					"-[-h]elp: this help;\n"
 					"-[-w]arming 1|0: by default - ON; Implicit - OFF;\n"
-					"-[-s]sort name|discreteness|duration|tick|type: by default - discreteness;\n"
+					"-[-s]sort name|discreteness|duration|tick|type|nosort: by default - discreteness;\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
 					"-[-r]epeat <N>: number of measurements. 5 by default;\n";
@@ -261,42 +272,18 @@ namespace
 		}
 #endif
 	} // suffix()
+
+	std::ostream& time_now(std::ostream& os)
+	{	char mbstr[20];
+		std::time_t t = std::time(nullptr);
+#pragma warning(suppress: 4996)
+		std::strftime(mbstr, sizeof(mbstr), "%Y.%m.%d %H:%M:%S", std::localtime(&t));
+		return os << mbstr;
+	}
 } // namespace
 
 namespace measure_functions
 {
-	class one_t
-	{
-		double sum_{};
-		double squares_sum_{};
-		unsigned cnt_{};
-	public:
-		void add(double d);
-		[[nodiscard]] double average() const;
-		[[nodiscard]] double std_deviation() const;
-	};
-
-	void one_t::add(double d)
-	{	++cnt_;
-		sum_ += d;
-		squares_sum_ += std::pow(d, 2.0);
-	}
-
-	double one_t::average() const
-	{	assert(cnt_);
-		return cnt_ ? sum_ / cnt_ : 0.0;
-	}
-
-	double one_t::std_deviation() const
-	{	assert(cnt_);
-		double result = 0.0;
-		if (cnt_)
-		{	result = std::sqrt(cnt_ * squares_sum_ / std::pow(sum_, 2) - 1) * 100.0;
-		}
-
-		return result;
-	}
-
 	struct str_out
 	{
 		std::string name_;
@@ -326,30 +313,27 @@ namespace measure_functions
 	struct data_t
 	{
 		std::string name_;
-		one_t call_duration_;
-		one_t discreteness_;
-		one_t unit_of_sleeping_process_;
-		one_t unit_of_currrentthread_work_;
-		one_t unit_of_allthreads_work_;
-	};
+		double call_duration_;
+		double discreteness_;
+		double unit_;
+		std::string type_;
+		//double unit_of_sleeping_process_;
+		//double unit_of_currrentthread_work_;
+		//double unit_of_allthreads_work_;
 
-	std::string type(const data_t& itm)
-	{
-		if (itm.unit_of_currrentthread_work_.average() / itm.unit_of_allthreads_work_.average() > 1.2)
-			return "Process"s; // The process-clock is affected by the load on all cores.
-		if (itm.unit_of_sleeping_process_.average() / itm.unit_of_currrentthread_work_.average() > 1.2)
-			return "Thread"s; // The thread-clock readings are affected only by the thread's load.
-		return "Wall"s; // Wall-clock readings are independent of processor load.
-	}
+		double duration_prec_;
+		double discreteness_prec_;
+		double unit_prec_;
+	};
 
 	misc::duration_t tick(const data_t& itm)
 	{
-		return misc::duration_t{ itm.unit_of_currrentthread_work_.average() };
+		return misc::duration_t{ itm.unit_ };
 	}
 
 	misc::duration_t discreteness(const data_t& itm)
 	{
-		return misc::duration_t{ itm.unit_of_currrentthread_work_.average() * itm.discreteness_.average() };
+		return misc::duration_t{ itm.unit_ * itm.discreteness_ };
 	}
 
 	template<sort_t E> auto make_tuple(const data_t& v);
@@ -358,19 +342,19 @@ namespace measure_functions
 	}
 
 	template<> auto make_tuple<sort_t::name>(const data_t& v)
-	{	return std::tuple{ v.name_, discreteness(v), v.call_duration_.average(), tick(v), type(v) };
+	{	return std::tuple{ v.name_, discreteness(v), v.call_duration_, tick(v), v.type_ };
 	}
 	template<> auto make_tuple<sort_t::discreteness>(const data_t& v)
-	{	return std::tuple{ discreteness(v), v.call_duration_.average(), tick(v), type(v), v.name_ };
+	{	return std::tuple{ discreteness(v), v.call_duration_, tick(v), v.type_, v.name_ };
 	}
 	template<> auto make_tuple<sort_t::duration>(const data_t& v)
-	{	return std::tuple{ v.call_duration_.average(), discreteness(v), tick(v), type(v), v.name_ };
+	{	return std::tuple{ v.call_duration_, discreteness(v), tick(v), v.type_, v.name_ };
 	}
 	template<> auto make_tuple<sort_t::tick>(const data_t& v)
-	{	return std::tuple{ tick(v), discreteness(v), v.call_duration_.average(), type(v), v.name_ };
+	{	return std::tuple{ tick(v), discreteness(v), v.call_duration_, v.type_, v.name_ };
 	}
 	template<> auto make_tuple<sort_t::type>(const data_t& v)
-	{	return std::tuple{ type(v), discreteness(v), v.call_duration_.average(), tick(v), v.name_ };
+	{	return std::tuple{ v.type_, discreteness(v), v.call_duration_, tick(v), v.name_ };
 	}
 
 	std::ostream& operator<<(std::ostream& out, const std::vector<data_t>& data)
@@ -393,33 +377,113 @@ namespace measure_functions
 			str_out s =
 			{	m.name_,
 				to_string(discreteness(m), 3),
-				to_string(misc::duration_t{ m.call_duration_.average() }),
-				to_string(misc::duration_t{ m.unit_of_currrentthread_work_.average() }),
-				type(m),
-				prn_sd(m.discreteness_.std_deviation()),
-				prn_sd(m.call_duration_.std_deviation()),
-				prn_sd(m.unit_of_currrentthread_work_.std_deviation()),
+				to_string(misc::duration_t{ m.call_duration_ }),
+				to_string(misc::duration_t{ m.unit_ }),
+				m.type_,
+				prn_sd(m.discreteness_prec_),
+				prn_sd(m.duration_prec_),
+				prn_sd(m.unit_prec_),
 			};
 			print_itm(out, s) << "\n";
 		}
 		return out;
 	}
 
-	std::vector<vi_mt::item_t> measurement(const strs_t& inc, const strs_t& exc, const std::function<void(double)>& progress) {
-		auto filter = [&inc, &exc](std::string_view s)
-			{
-				auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
-				if (std::any_of(exc.begin(), exc.end(), pred))
-					return false;
-				return inc.empty() || std::any_of(inc.begin(), inc.end(), pred);
-			};
+	vi_mt::cont_t measurement(const strs_t& inc, const strs_t& exc, const std::function<void(double)>& progress)
+	{	auto filter = [&inc, &exc](std::string_view s)
+		{	auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
+			return !(std::any_of(exc.begin(), exc.end(), pred) || !inc.empty() && std::none_of(inc.begin(), inc.end(), pred));
+		};
 
 		return vi_mt::metric_base_t::action(filter, progress);
 	}
 
-	std::vector<data_t> prepare(std::vector<data_t>&& data)
+	struct data2_t
 	{
-		auto pred = less<sort_t::discreteness>;
+		std::vector<double> call_duration_;
+		std::vector<double> discreteness_;
+		std::vector<double> unit_of_sleeping_process_;
+		std::vector<double> unit_of_currrentthread_work_;
+		std::vector<double> unit_of_allthreads_work_;
+	};
+
+	using cont2_t = std::map<std::string, data2_t, std::less<>>;
+
+	cont2_t collect()
+	{
+		misc::progress_t progress{ "Collecting function properties" };
+
+		std::map<std::string, data2_t, std::less<>> result;
+		for (int n = 0; n < g_repeat; ++n)
+		{	const auto meas = measurement(g_include, g_exclude, [n, &progress](double f) { progress((n + f) / g_repeat); });
+
+			for (const auto& [name, m] : meas)
+			{	auto& r = result[name];
+				r.call_duration_.emplace_back(m.call_duration_.count());
+				r.discreteness_.emplace_back(m.discreteness_);
+				r.unit_of_allthreads_work_.emplace_back(m.unit_of_allthreads_work_.count());
+				r.unit_of_currrentthread_work_.emplace_back(m.unit_of_currrentthread_work_.count());
+				r.unit_of_sleeping_process_.emplace_back(m.unit_of_sleeping_process_.count());
+			}
+		}
+
+		return result;
+	}
+
+#define CALC_SLICE
+#ifdef CALC_SLICE
+	std::pair<double, double> calc(std::vector<double> data)
+	{
+		auto aveg = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(data.size());
+		data.erase(std::remove_if(data.begin(), data.end(), [aveg](auto v) {return v > aveg; }), data.end());
+
+		aveg = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(data.size());
+		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
+		sd = static_cast<double>(data.size()) * sd / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
+		return std::make_pair(aveg, sd);
+	}
+#elif defined CALC_MIN
+	std::pair<double, double> calc(std::vector<double> data)
+	{
+		const auto min = *std::min_element(data.begin(), data.end());
+		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
+		sd = static_cast<double>(data.size()) * sd / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
+		return std::make_pair(min, sd);
+	}
+#else
+#	error "'calc()' function not defined."
+#endif
+
+	auto action(const cont2_t::value_type& pair)
+	{
+		const auto &itm = pair.second;
+		data_t result{ pair.first };
+
+		std::tie(result.discreteness_, result.discreteness_prec_) = calc(itm.discreteness_);
+		std::tie(result.call_duration_, result.duration_prec_) = calc(itm.call_duration_);
+		std::tie(result.unit_, result.unit_prec_) = calc(itm.unit_of_currrentthread_work_);
+		const auto uallw = calc(itm.unit_of_allthreads_work_).first;
+		const auto usleep = calc(itm.unit_of_sleeping_process_).first;
+
+		if (result.unit_ / uallw > 1.2)
+			result.type_ = "Process"s; // The process-clock is affected by the load on all cores.
+		if (usleep / result.unit_ > 1.2)
+			result.type_ = "Thread"s; // The thread-clock readings are affected only by the thread's load.
+		else
+			result.type_ = "Wall"s; // Wall-clock readings are independent of processor load.
+
+		return result;
+	}
+
+	std::vector<data_t> prepare(cont2_t&& data)
+	{
+		std::vector<data_t> result;
+
+		std::transform(data.begin(), data.end(), std::back_inserter(result), action);
+
+		if (g_sort != sort_t::nosort)
 		{
 			static constexpr bool(*sort_predicates[])(const data_t & l, const data_t & r) = {
 				// The order of the elements must match the order of the sort_t enum.
@@ -429,41 +493,13 @@ namespace measure_functions
 				less<sort_t::tick>,
 				less<sort_t::type>,
 			};
-			static_assert(std::size(sort_predicates) == static_cast<std::underlying_type_t<sort_t>>(sort_t::_quantity));
+			static_assert(std::size(sort_predicates) == static_cast<std::underlying_type_t<sort_t>>(sort_t::_quantity) - 1);
 
+			auto pred = less<sort_t::discreteness>;
 			if (const auto pos = static_cast<std::underlying_type_t<sort_t>>(g_sort); pos < std::size(sort_predicates))
 				pred = sort_predicates[pos];
-		}
 
-		auto result{ std::move(data) };
-		std::stable_sort(result.begin(), result.end(), pred);
-
-		return result;
-	}
-
-	std::vector<data_t> collect()
-	{
-		misc::progress_t progress{ "Collecting function properties" };
-
-		std::vector<data_t> result;
-		for (int n = 0; n < g_repeat; ++n)
-		{
-			auto meas = measurement(g_include, g_exclude, [n, &progress](double f) { progress((n + f) / g_repeat); });
-			if (result.empty())
-				result.resize(meas.size());
-
-			auto action = [](const vi_mt::item_t& s, data_t& d)
-			{	assert(d.name_.empty() || d.name_ == s.name_);
-				d.name_ = s.name_;
-				d.discreteness_.add(s.discreteness_);
-				d.call_duration_.add(s.call_duration_.count());
-				d.unit_of_allthreads_work_.add(s.unit_of_allthreads_work_.count());
-				d.unit_of_currrentthread_work_.add(s.unit_of_currrentthread_work_.count());
-				d.unit_of_sleeping_process_.add(s.unit_of_sleeping_process_.count());
-				return d;
-			};
-
-			std::transform(meas.begin(), meas.end(), result.begin(), result.begin(), action);
+			std::stable_sort(result.begin(), result.end(), pred);
 		}
 
 		return result;
@@ -476,20 +512,16 @@ namespace measure_functions
 	}
 } // namespace measure_functions
 
-std::vector<vi_mt::item_t> vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
+vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
 {
-	std::vector<item_t> result;
-	result.reserve(s_measurers_.size());
+	cont_t result;
 	for (std::size_t n = 0; n < s_measurers_.size(); ++n)
-	{
-		if (const auto& f = s_measurers_[n]; !filter || filter(f.get().name()))
-		{
-			auto fn = [&pb, n, sz = s_measurers_.size()](double part) {if (pb) pb((static_cast<double>(n) + part) / static_cast<double>(sz)); };
-			result.emplace_back(f.get().measurement(fn));
+	{	if (const auto& f = s_measurers_[n].get(); !filter || filter(f.name()))
+		{	auto fn = [&pb, n, sz = s_measurers_.size()](double part) {if (pb) pb((static_cast<double>(n) + part) / static_cast<double>(sz)); };
+			result.emplace(f.name(), f.measurement(fn));
 		}
 		else if (pb)
-		{
-			pb(static_cast<double>(n + 1) / static_cast<double>(s_measurers_.size()));
+		{	pb(static_cast<double>(n + 1) / static_cast<double>(s_measurers_.size()));
 		}
 	}
 	return result;
@@ -497,6 +529,10 @@ std::vector<vi_mt::item_t> vi_mt::metric_base_t::action(const std::function<bool
 
 int main(int argc, char* argv[])
 {
+	std::cout << "Start: " << time_now << '\n';
+	std::cout << "Build type: " << BUILD_TYPE << '\n';
+	endl(std::cout);
+
 	struct space_out : std::numpunct<char>
 	{	char do_thousands_sep() const override { return '\''; }  // separate with spaces
 		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
@@ -511,4 +547,6 @@ int main(int argc, char* argv[])
 
 	endl(std::cout);
 	suffix();
+
+	std::cout << "Finish: " << time_now << std::endl;
 }

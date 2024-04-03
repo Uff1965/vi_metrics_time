@@ -2,12 +2,12 @@
 #	define VI_METRICS_TIME_SOURCE_MISC_H_
 #	pragma once
 
-#include <cassert>
-#include <chrono>
-#include <iosfwd>
-#include <limits>
-#include <string>
-#include <utility>
+#	include <cassert>
+#	include <chrono>
+#	include <iosfwd>
+#	include <limits>
+#	include <string>
+#	include <utility>
 
 namespace misc
 {
@@ -39,6 +39,16 @@ namespace misc
 		~progress_t() { print(std::numeric_limits<double>::quiet_NaN()); }
 		void operator()(double f) const { assert(.0 <= f); print(f); }
 	};
-}
+} // namespace misc
 
+#	ifdef _MSC_VER
+#		define VI_OPTIMIZE_OFF _Pragma("optimize(\"\", off)")
+#		define VI_OPTIMIZE_ON  _Pragma("optimize(\"\", on)")
+#	elif defined __GNUC__
+#		define VI_OPTIMIZE_OFF _Pragma("GCC push_options") _Pragma("GCC optimize(\"O0\")")
+#		define VI_OPTIMIZE_ON  _Pragma("GCC pop_options")
+#	else
+#		define VI_OPTIMIZE_OFF
+#		define VI_OPTIMIZE_ON
+#	endif
 #endif // #ifndef VI_METRICS_TIME_SOURCE_MISC_H_

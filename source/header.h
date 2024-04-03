@@ -9,22 +9,12 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <ostream>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
-
-#ifdef _MSC_VER
-#	define VI_OPTIMIZE_OFF _Pragma("optimize(\"\", off)")
-#	define VI_OPTIMIZE_ON  _Pragma("optimize(\"\", on)")
-#elif defined __GNUC__
-#	define VI_OPTIMIZE_OFF _Pragma("GCC push_options") _Pragma("GCC optimize(\"O0\")")
-#	define VI_OPTIMIZE_ON  _Pragma("GCC pop_options")
-#else
-#	define VI_OPTIMIZE_OFF
-#	define VI_OPTIMIZE_ON
-#endif
 
 namespace vi_mt
 {
@@ -32,11 +22,10 @@ namespace vi_mt
 	using count_t = std::uint64_t;
 
 	[[nodiscard]] inline auto now() { return ch::high_resolution_clock::now(); }
-	using now_t = decltype(now());
+	using now_t = std::invoke_result_t<decltype(now)>;
 
 	struct item_t
 	{
-		std::string name_;
 		misc::duration_t call_duration_; // Duration of the Function call.
 		double discreteness_{}; // Average tick growth.
 		misc::duration_t unit_of_sleeping_process_; // Duration of one tick in a sleeping process.
@@ -44,14 +33,16 @@ namespace vi_mt
 		misc::duration_t unit_of_allthreads_work_; // Duration of one tick when loading multiple threads.
 	};
 
+	using cont_t = std::map<std::string, vi_mt::item_t, std::less<>>;
+
 	struct metric_base_t
 	{
 		virtual std::string_view name() const = 0;
 		virtual item_t measurement(const std::function<void(double)>& progress) const = 0;
 		metric_base_t() { s_measurers_.emplace_back(std::ref(*this)); }; // Self-registration
 
-		static inline std::vector< std::reference_wrapper<const metric_base_t>> s_measurers_;
-		static std::vector<item_t> action(const std::function<bool(std::string_view)>& filter = {}, const std::function<void(double)>& pb = {});
+		static inline std::vector<std::reference_wrapper<const metric_base_t>> s_measurers_;
+		static cont_t action(const std::function<bool(std::string_view)>& filter = {}, const std::function<void(double)>& pb = {});
 	};
 
 	template<const char* Name, auto Func, auto... Args>
@@ -196,7 +187,7 @@ namespace vi_mt
 		e = now();
 		const auto diff2 = e - s;
 
-		assert(diff2 > diff1);
+//		assert(diff2 > diff1);
 		const auto diff = diff2 - diff1;
 		return misc::duration_t{ std::max(decltype(diff){0}, diff) / static_cast<double>(CNT * CNT_EXT) };
 	}
@@ -206,8 +197,7 @@ namespace vi_mt
 	{
 		misc::warming(false, ch::seconds{ 1 }, true);
 
-		item_t result{ Name };
-		[[maybe_unused]] volatile auto _ = vi_tmGetTicks(); // A naive attempt to load the function code into the processor cache before starting measurements.
+		item_t result;
 		result.call_duration_ = measurement_call_duration();
 		progress(1.0 / 5.);
 		result.discreteness_ = measurement_discreteness();

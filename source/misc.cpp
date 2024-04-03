@@ -66,61 +66,61 @@ double misc::round(double num, unsigned char prec, unsigned char dec)
 
 #ifndef NDEBUG
 const auto unit_test_round = []
+{
+	struct
 	{
-		struct
-		{
-			int line_;
-			double org_;
-			double rnd_;
-			unsigned char precision_ = 2;
-			unsigned char dec_ = 1;
-		}
-		constexpr static samples[] =
-		{
-			{__LINE__, 0.0, 0.0, 1, 0},
-			{__LINE__, 0.0, 0.0, 2, 1},
-			{__LINE__, 0.0, 0.0, 4, 1},
-			{__LINE__, 0.0, 0.0, 5, 2},
+		int line_;
+		double org_;
+		double rnd_;
+		unsigned char precision_ = 2;
+		unsigned char dec_ = 1;
+	}
+	constexpr static samples[] =
+	{
+		{__LINE__, 0.0, 0.0, 1, 0},
+		{__LINE__, 0.0, 0.0, 2, 1},
+		{__LINE__, 0.0, 0.0, 4, 1},
+		{__LINE__, 0.0, 0.0, 5, 2},
 
-			{__LINE__, 1.23456789, 1.0, 1, 0},
-			{__LINE__, 1.23456789, 1.2, 2, 1},
-			{__LINE__, 1.23456789, 1.2, 4, 1},
-			{__LINE__, 1.23456789, 1.23, 5, 2},
+		{__LINE__, 1.23456789, 1.0, 1, 0},
+		{__LINE__, 1.23456789, 1.2, 2, 1},
+		{__LINE__, 1.23456789, 1.2, 4, 1},
+		{__LINE__, 1.23456789, 1.23, 5, 2},
 
-			{__LINE__, 123.456789, 100.0, 1, 0},
-			{__LINE__, 123.456789, 120.0, 2, 1},
-			{__LINE__, 123.456789, 123.5, 4, 1},
-			{__LINE__, 123.456789, 123.46, 5, 2},
+		{__LINE__, 123.456789, 100.0, 1, 0},
+		{__LINE__, 123.456789, 120.0, 2, 1},
+		{__LINE__, 123.456789, 123.5, 4, 1},
+		{__LINE__, 123.456789, 123.46, 5, 2},
 
-			{__LINE__, 12.3456789e3, 10.0e3, 1, 0},
-			{__LINE__, 12.3456789e3, 12.0e3, 2, 1},
-			{__LINE__, 12.3456789e3, 12.3e3, 4, 1},
-			{__LINE__, 12.3456789e3, 12.35e3, 5, 2},
+		{__LINE__, 12.3456789e3, 10.0e3, 1, 0},
+		{__LINE__, 12.3456789e3, 12.0e3, 2, 1},
+		{__LINE__, 12.3456789e3, 12.3e3, 4, 1},
+		{__LINE__, 12.3456789e3, 12.35e3, 5, 2},
 
-			{__LINE__, 0.123456789, 0.10, 1, 0},
-			{__LINE__, 0.123456789, 0.12, 2, 1},
-			{__LINE__, 0.123456789, 0.1235, 4, 1},
-			{__LINE__, 0.123456789, 0.12346, 5, 2},
+		{__LINE__, 0.123456789, 0.10, 1, 0},
+		{__LINE__, 0.123456789, 0.12, 2, 1},
+		{__LINE__, 0.123456789, 0.1235, 4, 1},
+		{__LINE__, 0.123456789, 0.12346, 5, 2},
 
-			{__LINE__, 0.00123456789, 0.001, 1, 0},
-			{__LINE__, 0.00123456789, 0.0012, 2, 1},
-			{__LINE__, 0.00123456789, 0.0012, 4, 1},
-			{__LINE__, 0.00123456789, 0.00123, 5, 2},
+		{__LINE__, 0.00123456789, 0.001, 1, 0},
+		{__LINE__, 0.00123456789, 0.0012, 2, 1},
+		{__LINE__, 0.00123456789, 0.0012, 4, 1},
+		{__LINE__, 0.00123456789, 0.00123, 5, 2},
 
-			{__LINE__, 0.0123456789e-3, 0.010e-3, 1, 0},
-			{__LINE__, 0.0123456789e-3, 0.012e-3, 2, 1},
-			{__LINE__, 0.0123456789e-3, 0.0123e-3, 4, 1},
-			{__LINE__, 0.0123456789e-3, 0.01235e-3, 5, 2},
-		};
+		{__LINE__, 0.0123456789e-3, 0.010e-3, 1, 0},
+		{__LINE__, 0.0123456789e-3, 0.012e-3, 2, 1},
+		{__LINE__, 0.0123456789e-3, 0.0123e-3, 4, 1},
+		{__LINE__, 0.0123456789e-3, 0.01235e-3, 5, 2},
+	};
 
-		for (auto& i : samples)
-		{
-			const auto rnd = misc::round(i.org_, i.precision_, i.dec_);
-			assert(std::max(rnd, i.rnd_) * DBL_EPSILON >= std::abs(rnd - i.rnd_));
-		}
+	for (auto& i : samples)
+	{
+		const auto rnd = misc::round(i.org_, i.precision_, i.dec_);
+		assert(std::max(rnd, i.rnd_) * DBL_EPSILON >= std::abs(rnd - i.rnd_));
+	}
 
-		return 0;
-	}();
+	return 0;
+}();
 #endif // #ifndef NDEBUG
 
 std::string misc::to_string(duration_t sec, unsigned char precision, unsigned char dec)

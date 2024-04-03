@@ -121,19 +121,6 @@ namespace vi_mt
 	}
 	METRIC("QueryUnbiasedInterruptTimePrecise()", tm_QueryUnbiasedInterruptTimePrecise);
 
-	//count_t tm_GetSystemTimesIKU()
-	//{
-	//	// Retrieves system timing information.
-	//	// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
-	//	FILETIME it, kt, ut;
-	//	::GetSystemTimes(&it, &kt, &ut);
-	//	LARGE_INTEGER il{ it.dwLowDateTime, LONG(it.dwHighDateTime) };
-	//	LARGE_INTEGER kl{ kt.dwLowDateTime, LONG(kt.dwHighDateTime) };
-	//	LARGE_INTEGER ul{ ut.dwLowDateTime, LONG(ut.dwHighDateTime) };
-	//	return il.QuadPart + kl.QuadPart + ul.QuadPart;
-	//}
-	//METRIC("GetSystemTimes() I+K+U", tm_GetSystemTimesIKU);
-
 	count_t tm_GetSystemTimesKU()
 	{
 		// Retrieves system timing information.
@@ -143,26 +130,6 @@ namespace vi_mt
 		return bit_cast(kt) + bit_cast(ut);
 	}
 	METRIC("GetSystemTimes() K+U", tm_GetSystemTimesKU);
-
-	count_t tm_GetSystemTimesU()
-	{
-		// Retrieves system timing information.
-		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
-		FILETIME ut;
-		::GetSystemTimes(nullptr, nullptr, &ut);
-		return bit_cast(ut);
-	}
-	METRIC("GetSystemTimes() U", tm_GetSystemTimesU);
-
-	//count_t tm_GetSystemTimesK()
-	//{
-	//	// Retrieves system timing information.
-	//	// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
-	//	FILETIME kt;
-	//	::GetSystemTimes(nullptr, &kt, nullptr);
-	//	return LARGE_INTEGER{ kt.dwLowDateTime, LONG(kt.dwHighDateTime) }.QuadPart;
-	//}
-	//METRIC("GetSystemTimes() K", tm_GetSystemTimesK);
 
 	count_t tm_GetSystemTime()
 	{	SYSTEMTIME st;
