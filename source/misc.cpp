@@ -12,6 +12,7 @@
 #	include <unistd.h> // for isatty(...)
 #endif
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cmath>
@@ -318,15 +319,13 @@ void misc::warming(bool all, ch::milliseconds d, bool silent)
 	if (0 != d.count())
 	{	std::unique_ptr<progress_t> progress{ silent ? nullptr : new progress_t{ "Warming" } };
 
-		std::atomic_bool done = false;
 		const auto cnt = (all && std::thread::hardware_concurrency() > 1) ?
 			(std::thread::hardware_concurrency() - 1) :
 			0;
 
+		std::atomic_bool done = false;
 		std::vector<std::thread> threads(cnt);
-		for (auto& t : threads)
-		{	t = std::thread{ [&done] { while (!done) {}} };
-		}
+		std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }} }; });
 
 		const auto start = ch::steady_clock::now();
 		const auto stop = start + d;
@@ -339,14 +338,11 @@ void misc::warming(bool all, ch::milliseconds d, bool silent)
 			if(progress)
 				progress->operator()(ch::duration_cast<ch::duration<double>>(temp - start) / d);
 		}
-
 		while (ch::steady_clock::now() < stop)
 		{/**/
 		}
-
 		done = true;
-		for (auto& t : threads)
-		{	t.join();
-		}
+
+		std::for_each(threads.begin(), threads.end(), [](auto& t) {t.join(); });
 	}
 }

@@ -4,6 +4,7 @@
 
 #include "misc.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -132,18 +133,18 @@ namespace vi_mt
 	template<const char* Name, auto Func, auto... Args>
 	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_all_threads_work()
 	{
-		auto allthreads_load = [](auto limit) {
-			static const auto cnt = (std::thread::hardware_concurrency() > 1) ? (std::thread::hardware_concurrency() - 1) : 0;
-			std::vector<std::thread> threads(cnt);
+		auto allthreads_load = [](auto limit)
+		{	static const auto cnt = (std::thread::hardware_concurrency() > 1) ? (std::thread::hardware_concurrency() - 1) : 0;
 			std::atomic_bool done = false;
+			std::vector<std::thread> threads(cnt);
+			std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }}};});
 
-			for (auto& t : threads)
-				t = std::thread([&done] { while (!done) {/**/} });
-			while (now() < limit) {/**/}
-
+			while (now() < limit)
+			{/**/
+			}
 			done = true;
-			for (auto& t : threads)
-				t.join();
+
+			std::for_each(threads.begin(), threads.end(), [](auto& t) {t.join(); });
 		};
 
 		return  measurement_unit_aux(allthreads_load);

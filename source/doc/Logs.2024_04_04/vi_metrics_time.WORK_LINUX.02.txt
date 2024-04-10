@@ -1,0 +1,49 @@
+Start: 2024.04.04 11:49:41
+Build type: Release
+
+Command line: "./vi_metrics_time" "-s" "name" "-r" "20"
+
+Model name:                         Intel(R) Core(TM) i7-6700K CPU @ 4.00GHz
+CPU max MHz:                        4200.0000
+CPU min MHz:                        800.0000
+
+
+Collecting function properties... Done (1.8ks)
+
+Measured properties of time functions:
+Name............................................: Discreteness:      % Duration:      % One tick:      %   Type:
+<LNX>::times(tms)...............................:        10.0ms   0.0%   890.0ns   1.6%    10.0ms   0.5%  Thread
+<LNX>::times(nullptr)...........................:        10.0ms   0.0%   720.0ns   1.0%    10.0ms   0.0%    Wall
+<LNX>::gettimeofday()...........................:         1.0us   0.0%    15.0ns   1.0%     1.0us   0.0%    Wall
+<LNX>::getrusage(RUSAGE_THREAD).................:         2.8ms   0.3%   790.0ns   0.9%     1.0us   0.0%  Thread
+<LNX>::getrusage(RUSAGE_SELF)...................:         1.0us   0.0%   950.0ns   0.1%     1.0us   0.0%  Thread
+<LNX>::clock_gettime(CLOCK_THREAD_CPUTIME_ID)...:       874.0ns   0.8%   870.0ns   0.2%     1.0ns   0.0%  Thread
+<LNX>::clock_gettime(CLOCK_TAI).................:        20.3ns   2.8%    14.0ns   0.2%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_REALTIME_COARSE).....:         4.0ms   0.0%     5.0ns   1.2%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_REALTIME)............:        20.3ns   1.8%    18.0ns  19.0%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_PROCESS_CPUTIME_ID)..:       888.0ns   0.3%   910.0ns   0.3%     1.0ns   0.0%  Thread
+<LNX>::clock_gettime(CLOCK_MONOTONIC_RAW).......:        20.7ns   2.8%    21.0ns  13.0%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_MONOTONIC_COARSE)....:         4.0ms   0.0%     5.1ns   2.1%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_MONOTONIC)...........:        20.9ns   3.8%    20.0ns  12.0%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_BOOTTIME)............:        21.9ns   1.2%    14.0ns   0.2%     1.0ns   0.0%    Wall
+<C>  ::timespec_get(TIME_UTC)...................:        22.5ns   4.2%    16.0ns   1.0%     1.0ns   0.0%    Wall
+<C>  ::time()...................................:         1.0s    0.0%     1.8ns   0.4%     1.0s    0.0%    Wall
+<C>  ::clock()..................................:         1.0us   0.0%   880.0ns   0.6%     1.0us   0.0%  Thread
+<C++>::system_clock::now()......................:        20.9ns   3.2%    16.0ns   1.1%     1.0ns   0.0%    Wall
+<C++>::steady_clock::now()......................:        21.4ns   1.9%    16.0ns   0.1%     1.0ns   0.0%    Wall
+<C++>::high_resolution_clock::now().............:        20.7ns   1.8%    15.0ns   0.8%     1.0ns   0.0%    Wall
+<ASM>::tm_rdtscp................................:         8.6ns   0.8%     8.5ns   0.2%   250.0ps   0.0%    Wall
+<ASM>::tm_rdtsc.................................:         6.3ns   1.4%     6.3ns   1.9%   250.0ps   0.0%    Wall
+
+
+Notes:
+	The std::chrono::system_clock::is_steady:          false;
+	The std::chrono::steady_clock::is_steady:          true;
+	The std::chrono::high_resolution_clock::is_steady: false;
+	The std::chrono::system_clock::duration:            1.0ns;
+	The std::chrono::steady_clock::duration:            1.0ns;
+	The std::chrono::high_resolution_clock::duration:   1.0ns;
+	The number of clock vi_tmGetTicks per second 'CLOCKS_PER_SEC': 1'000'000 (what is equivalent to 1.0us)
+	The number of clock vi_tmGetTicks per second 'sysconf(_SC_CLK_TCK)': 100 (10ms);
+	Resolution (precision) 'clock_getres(CLOCK_REALTIME)': 1.0ns;	Resolution (precision) 'clock_getres(CLOCK_MONOTONIC)': 1.0ns;	Resolution (precision) 'clock_getres(CLOCK_PROCESS_CPUTIME_ID)': 1.0ns;	Resolution (precision) 'clock_getres(CLOCK_THREAD_CPUTIME_ID)': 1.0ns;
+Finish: 2024.04.04 12:19:41
