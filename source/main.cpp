@@ -469,7 +469,7 @@ namespace measure_functions
 
 		if (result.unit_ / uallw > 1.2)
 			result.type_ = "Process"s; // The process-clock is affected by the load on all cores.
-		if (usleep / result.unit_ > 1.2)
+		else if (usleep / result.unit_ > 1.2)
 			result.type_ = "Thread"s; // The thread-clock readings are affected only by the thread's load.
 		else
 			result.type_ = "Wall"s; // Wall-clock readings are independent of processor load.
