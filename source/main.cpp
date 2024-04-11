@@ -433,24 +433,22 @@ namespace measure_functions
 #define CALC_SLICE
 #ifdef CALC_SLICE
 	std::pair<double, double> calc(std::vector<double> data)
-	{
-		assert(!data.empty());
+	{	assert(!data.empty());
 
 		const auto begin = data.begin();
 		auto end = data.end();
 		auto size = static_cast<double>(data.size());
+
+		// Average.
 		auto aveg = std::accumulate(begin, end, 0.0) / size;
 
-		if (const auto it = std::remove_if(begin, end, [max = 1.2 * aveg](auto v) {return v > max; }); begin != it)
+		if (const auto it = std::remove_if(begin, end, [max = 1.2 * aveg](auto v) {return v > max; }); it != end)
 		{	end = it;
 			size = static_cast<double>(std::distance(begin, end));
 			aveg = std::accumulate(begin, end, 0.0) / size;
 		}
-		else
-		{	assert(false);
-		}
 
-		// Standard deviation in percent.
+		// Standard Deviation in percentage.
 		auto sd = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
 		sd = sd * size / std::pow(std::accumulate(begin, end, 0.0), 2);
 		assert(sd >= 1.0);
@@ -462,11 +460,11 @@ namespace measure_functions
 	const auto test_calc = []
 	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} !!!
 		constexpr auto average = 4.142857143;
-		constexpr auto sd = 23.89035597;
+		constexpr auto sd = 0.9897433186 * 100.0 / average; // percentages
 
 		const auto [a, d] = calc(samples);
-		assert(std::abs(a / average - 1.0) < 0.000'1 );
-		assert(std::abs(d / sd - 1.0) < 0.000'1);
+		assert(std::abs(a / average - 1.0) < 1e-6 );
+		assert(std::abs(d / sd - 1.0) < 1e-6);
 		return 0;
 	}();
 #	endif
