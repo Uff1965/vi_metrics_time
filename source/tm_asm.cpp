@@ -57,20 +57,3 @@ namespace vi_mt
 //#   ERROR: You need to define function(s) for your OS and CPU
 #endif
 } // namespace vi_mt
-
-using ptr_rdtsc_t = vi_mt::count_t(*)();
-extern volatile ptr_rdtsc_t ptr_rdtsc = vi_mt::tm_rdtsc;
-extern volatile ptr_rdtsc_t ptr_rdtscp = vi_mt::tm_rdtscp;
-
-namespace vi_mt
-{
-    count_t tm_rdtsc_ptr() {
-        return ptr_rdtsc();
-    }
-    METRIC("rdtsc_ptr", tm_rdtsc_ptr);
-
-    count_t tm_rdtscp_ptr() {
-        return ptr_rdtscp();
-    }
-    METRIC("rdtscp_ptr", tm_rdtscp_ptr);
-}

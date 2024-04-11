@@ -378,7 +378,7 @@ namespace measure_functions
 	vi_mt::cont_t measurement(const strs_t& inc, const strs_t& exc, const std::function<void(double)>& progress)
 	{	auto filter = [&inc, &exc](std::string_view s)
 		{	auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
-			return !(std::any_of(exc.begin(), exc.end(), pred) || !inc.empty() && std::none_of(inc.begin(), inc.end(), pred));
+			return !(std::any_of(exc.begin(), exc.end(), pred) || (!inc.empty() && std::none_of(inc.begin(), inc.end(), pred)));
 		};
 
 		return vi_mt::metric_base_t::action(filter, progress);
