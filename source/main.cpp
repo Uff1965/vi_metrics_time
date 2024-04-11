@@ -434,21 +434,51 @@ namespace measure_functions
 #ifdef CALC_SLICE
 	std::pair<double, double> calc(std::vector<double> data)
 	{
-		auto aveg = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(data.size());
-		data.erase(std::remove_if(data.begin(), data.end(), [aveg](auto v) {return v > aveg; }), data.end());
+		assert(!data.empty());
 
-		aveg = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(data.size());
-		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd = static_cast<double>(data.size()) * sd / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		const auto begin = data.begin();
+		auto end = data.end();
+		auto size = static_cast<double>(data.size());
+		auto aveg = std::accumulate(begin, end, 0.0) / size;
+
+		if (const auto it = std::remove_if(begin, end, [max = 1.2 * aveg](auto v) {return v > max; }); begin != it)
+		{	end = it;
+			size = static_cast<double>(std::distance(begin, end));
+			aveg = std::accumulate(begin, end, 0.0) / size;
+		}
+		else
+		{	assert(false);
+		}
+
+		// Standard deviation in percent.
+		auto sd = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
+		sd = sd * size / std::pow(std::accumulate(begin, end, 0.0), 2);
+		assert(sd >= 1.0);
 		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
+
 		return std::make_pair(aveg, sd);
 	}
+#	ifndef NDEBUG
+	const auto test_calc = []
+	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} !!!
+		constexpr auto average = 4.142857143;
+		constexpr auto sd = 23.89035597;
+
+		const auto [a, d] = calc(samples);
+		assert(std::abs(a / average - 1.0) < 0.000'1 );
+		assert(std::abs(d / sd - 1.0) < 0.000'1);
+		return 0;
+	}();
+#	endif
 #elif defined CALC_MIN
 	std::pair<double, double> calc(std::vector<double> data)
 	{
+		assert(!data.empty());
+
 		const auto min = *std::min_element(data.begin(), data.end());
 		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd = static_cast<double>(data.size()) * sd / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		sd = sd * static_cast<double>(data.size()) / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		assert(sd >= 1.0);
 		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
 		return std::make_pair(min, sd);
 	}
