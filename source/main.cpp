@@ -40,12 +40,6 @@ namespace ch = std::chrono;
 
 namespace
 {
-#ifdef NDEBUG
-	constexpr char BUILD_TYPE[] = "Release";
-#else
-	constexpr char BUILD_TYPE[] = "Debug";
-#endif
-
 	using strs_t = std::vector<std::string>;
 	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, nosort, _quantity };
 
@@ -272,14 +266,6 @@ namespace
 		}
 #endif
 	} // suffix()
-
-	std::ostream& time_now(std::ostream& os)
-	{	char mbstr[20];
-		std::time_t t = std::time(nullptr);
-#pragma warning(suppress: 4996)
-		std::strftime(mbstr, sizeof(mbstr), "%Y.%m.%d %H:%M:%S", std::localtime(&t));
-		return os << mbstr;
-	}
 } // namespace
 
 namespace measure_functions
@@ -359,7 +345,7 @@ namespace measure_functions
 
 	std::ostream& operator<<(std::ostream& out, const std::vector<data_t>& data)
 	{
-		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "%", "%", "%"}) << "\n";
+		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-"}) << "\n";
 
 		for (const auto& m : data)
 		{
@@ -557,15 +543,22 @@ vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_
 
 int main(int argc, char* argv[])
 {
-	std::cout << "Start: " << time_now << '\n';
-	std::cout << "Build type: " << BUILD_TYPE << '\n';
+#ifdef NDEBUG
+	static constexpr auto BUILD_TYPE = "Release"sv;
+#else
+	static constexpr auto BUILD_TYPE = "Debug"sv;
+#endif
+
+	const auto start = std::time(nullptr);
+	std::cout << "Start: "sv << std::put_time(std::localtime(&start), "%Y.%m.%d %H:%M:%S") << '\n';
+	std::cout << "Build type: "sv << BUILD_TYPE << '\n';
 	endl(std::cout);
 
-	struct space_out : std::numpunct<char>
+	struct space_out_t : std::numpunct<char>
 	{	char do_thousands_sep() const override { return '\''; }  // separate with spaces
 		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
 	};
-	std::cout.imbue(std::locale(std::cout.getloc(), new space_out));
+	std::cout.imbue(std::locale(std::cout.getloc(), new space_out_t));
 
 	params(argc, argv);
 	prefix();
@@ -576,5 +569,7 @@ int main(int argc, char* argv[])
 	endl(std::cout);
 	suffix();
 
-	std::cout << "Finish: " << time_now << std::endl;
+	const auto expend = std::time(nullptr) - start;
+	std::cout << "\nTime expend: "sv << std::put_time(std::gmtime(&expend), "%H:%M:%S");
+	endl(std::cout);
 }
