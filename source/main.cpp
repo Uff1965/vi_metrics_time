@@ -541,7 +541,7 @@ namespace measure_functions
 } // namespace measure_functions
 
 vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
-{
+{	
 	cont_t result;
 	for (std::size_t n = 0; n < s_measurers_.size(); ++n)
 	{	if (const auto& f = s_measurers_[n].get(); !filter || filter(f.name()))
