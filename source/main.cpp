@@ -296,7 +296,7 @@ namespace measure_functions
 		std::string val_prec_{""};
 	};
 
-	std::ostream& print_itm(std::ostream& out, str_out str)
+	std::ostream& print_itm(std::ostream& out, const str_out& str)
 	{
 		return out << std::left << std::setfill('.')
 			<< std::setw(48) << str.name_ << ": "
@@ -450,7 +450,7 @@ namespace measure_functions
 
 		// Standard Deviation in percentage.
 		auto sd = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd = sd * size / std::pow(std::accumulate(begin, end, 0.0), 2);
+		sd = sd * size / std::pow(std::accumulate(begin, end, 0.0), 2) + std::numeric_limits<decltype(sd)>::epsilon();
 		assert(sd >= 1.0);
 		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
 
@@ -458,12 +458,12 @@ namespace measure_functions
 	}
 #	ifndef NDEBUG
 	const auto test_calc = []
-	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} !!!
+	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} see function calc !!!
 		constexpr auto average = 4.142857143;
 		constexpr auto sd = 0.9897433186 * 100.0 / average; // percentages
 
 		const auto [a, d] = calc(samples);
-		assert(std::abs(a / average - 1.0) < 1e-6 );
+		assert(std::abs(a / average - 1.0) < 1e-6);
 		assert(std::abs(d / sd - 1.0) < 1e-6);
 		return 0;
 	}();

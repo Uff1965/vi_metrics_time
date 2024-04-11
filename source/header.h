@@ -137,7 +137,7 @@ namespace vi_mt
 		{	static const auto cnt = (std::thread::hardware_concurrency() > 1) ? (std::thread::hardware_concurrency() - 1) : 0;
 			std::atomic_bool done = false;
 			std::vector<std::thread> threads(cnt);
-			std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }}};});
+			std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }}};}); //-V776 Potentially infinite loop
 
 			while (now() < limit)
 			{/**/

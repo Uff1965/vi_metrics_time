@@ -69,7 +69,7 @@ double misc::round(double num, unsigned char prec, unsigned char dec)
 const auto unit_test_round = []
 {
 	struct
-	{
+	{	//-V802 On 64-bit platform, structure size can be reduced from 32 to 24 bytes by rearranging the fields according to their sizes in decreasing order.
 		int line_;
 		double org_;
 		double rnd_;
@@ -147,7 +147,7 @@ std::string misc::to_string(duration_t sec, unsigned char precision, unsigned ch
 const auto unit_test_to_string = []
 {
 	struct
-	{
+	{	//-V802
 		int line_;
 		misc::duration_t sec_;
 		std::string_view res_;
@@ -325,7 +325,7 @@ void misc::warming(bool all, ch::milliseconds d, bool silent)
 
 		std::atomic_bool done = false;
 		std::vector<std::thread> threads(cnt);
-		std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }} }; });
+		std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }} }; }); //-V776 Potentially infinite loop
 
 		const auto start = ch::steady_clock::now();
 		const auto stop = start + d;
