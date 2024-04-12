@@ -1,3 +1,16 @@
-@echo START: %DATE% %TIME%
-START /D . /ABOVENORMAL /WAIT /B vi_metrics_time.exe -s name -r 20 >vi_metrics_time.%COMPUTERNAME%.txt
-@echo FINISH: %TIME%
+@ECHO OFF
+
+ECHO START: %DATE% %TIME%
+
+SET cnt=1
+IF NOT %1.==. SET cnt=%1
+
+SET rep=20
+IF NOT %2.==. SET rep=%2
+
+FOR /l %%n IN (1, 1, %cnt%) DO (
+	START /D . /ABOVENORMAL /WAIT /B vi_metrics_time.exe -s name -r %rep% >vi_metrics_time.%COMPUTERNAME%.%%n.txt
+	ECHO %%n from %cnt% done.
+)
+
+ECHO FINISH: %TIME%
