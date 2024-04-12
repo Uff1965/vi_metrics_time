@@ -345,7 +345,7 @@ namespace measure_functions
 
 	std::ostream& operator<<(std::ostream& out, const std::vector<data_t>& data)
 	{
-		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-"}) << "\n";
+		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+\/-", "+\/-", "+\/-"}) << "\n";
 
 		for (const auto& m : data)
 		{
