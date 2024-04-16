@@ -196,7 +196,7 @@ namespace vi_mt
 	template<const char* Name, auto Func, auto... Args>
 	inline item_t metric_t<Name, Func, Args...>::measurement(const std::function<void(double)>& progress) const
 	{
-		misc::warming(false, ch::seconds{ 1 }, true);
+		misc::warming(false, ch::milliseconds{ 250 }, true);
 
 		item_t result;
 		result.call_duration_ = measurement_call_duration();

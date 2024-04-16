@@ -41,9 +41,9 @@ namespace ch = std::chrono;
 namespace
 {
 	using strs_t = std::vector<std::string>;
-	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, nosort, _quantity };
+	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, _quantity };
 
-	auto g_sort = sort_t::discreteness;
+	auto g_sort = sort_t::name;
 	auto g_warming = 1'000ms;
 	strs_t g_include;
 	strs_t g_exclude;
@@ -56,7 +56,7 @@ namespace
 		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
 	};
 
-	void params(int argc, char* argv[])
+	void parsing_of_parameters(int argc, char* argv[])
 	{
 		auto fn = [](const std::string& i, const char* s) {
 			std::ostringstream os;
@@ -85,8 +85,6 @@ namespace
 					g_sort = sort_t::tick;
 				else if ("type"sv == ptr)
 					g_sort = sort_t::type;
-				else if ("nosort"sv == ptr)
-					g_sort = sort_t::nosort;
 				else
 				{	std::cerr << "ERROR: Unknown value for parametr --sort: \'" << ptr << "\'\n";
 					std::exit(1);
@@ -137,7 +135,7 @@ namespace
 				std::cout << "\nOptions:\n" <<
 					"-[-h]elp: this help;\n"
 					"-[-w]arming 1|0: by default - ON; Implicit - OFF;\n"
-					"-[-s]sort name|discreteness|duration|tick|type|nosort: by default - discreteness;\n"
+					"-[-s]sort name|discreteness|duration|tick|type: by default - discreteness;\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
 					"-[-r]epeat <N>: number of measurements. 5 by default;\n";
@@ -145,7 +143,7 @@ namespace
 				std::exit(error ? EXIT_FAILURE : EXIT_SUCCESS);
 			}
 		} // for (int n = 1; n < argc;)
-	} // params(int argc, char* argv[])
+	} // parsing_of_parameters(int argc, char* argv[])
 
 	void prefix()
 	{
@@ -266,10 +264,17 @@ namespace
 		}
 #endif
 	} // suffix()
-} // namespace
 
-namespace measure_functions
-{
+	class locale_with_grouping : public std::locale
+	{
+		struct space_out_t : std::numpunct<char>
+		{	char do_thousands_sep() const override { return '\''; }  // separate with apostrophe
+			std::string do_grouping() const override { return "\3"; } // groups of 3 digit
+		};
+	public:
+		locale_with_grouping(const std::locale& loc) : std::locale(loc, new space_out_t) {}
+	};
+
 	struct str_out
 	{
 		std::string name_;
@@ -323,10 +328,6 @@ namespace measure_functions
 	}
 
 	template<sort_t E> auto make_tuple(const data_t& v);
-	template<sort_t E> bool less(const data_t& l, const data_t& r)
-	{	return make_tuple<E>(r) < make_tuple<E>(l);
-	}
-
 	template<> auto make_tuple<sort_t::name>(const data_t& v)
 	{	return std::tuple{ v.name_, discreteness(v), v.call_duration_, tick(v), v.type_ };
 	}
@@ -341,6 +342,9 @@ namespace measure_functions
 	}
 	template<> auto make_tuple<sort_t::type>(const data_t& v)
 	{	return std::tuple{ v.type_, discreteness(v), v.call_duration_, tick(v), v.name_ };
+	}
+	template<sort_t E> bool less(const data_t& l, const data_t& r)
+	{	return make_tuple<E>(r) < make_tuple<E>(l);
 	}
 
 	std::ostream& operator<<(std::ostream& out, const std::vector<data_t>& data)
@@ -396,10 +400,9 @@ namespace measure_functions
 	using cont2_t = std::map<std::string, data2_t, std::less<>>;
 
 	cont2_t collect()
-	{
+	{	std::map<std::string, data2_t, std::less<>> result;
 		misc::progress_t progress{ "Collecting function properties" };
 
-		std::map<std::string, data2_t, std::less<>> result;
 		for (int n = 0; n < g_repeat; ++n)
 		{	const auto meas = measurement(g_include, g_exclude, [n, &progress](double f) { progress((n + f) / g_repeat); });
 
@@ -416,9 +419,10 @@ namespace measure_functions
 		return result;
 	}
 
-#define CALC_SLICE
+//#define CALC_SLICE
+#define CALC_MIN
 #ifdef CALC_SLICE
-	std::pair<double, double> calc(std::vector<double> data)
+	std::pair<double, double> calc_stat(std::vector<double> data)
 	{	assert(!data.empty());
 
 		const auto begin = data.begin();
@@ -436,7 +440,8 @@ namespace measure_functions
 
 		// Standard Deviation in percentage.
 		auto sd = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd = sd * size / std::pow(std::accumulate(begin, end, 0.0), 2) + std::numeric_limits<decltype(sd)>::epsilon();
+		sd *= size / std::pow(std::accumulate(begin, end, 0.0), 2);
+		sd += std::numeric_limits<decltype(sd)>::epsilon();
 		assert(sd >= 1.0);
 		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
 
@@ -444,42 +449,54 @@ namespace measure_functions
 	}
 #	ifndef NDEBUG
 	const auto test_calc = []
-	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} see function calc !!!
+	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} see function calc_stat !!!
 		constexpr auto average = 4.142857143;
-		constexpr auto sd = 0.9897433186 * 100.0 / average; // percentages
+		constexpr auto sd = 0.9897433186 / average * 100.0; // percentages
 
-		const auto [a, d] = calc(samples);
+		const auto [a, d] = calc_stat(samples);
 		assert(std::abs(a / average - 1.0) < 1e-6);
 		assert(std::abs(d / sd - 1.0) < 1e-6);
 		return 0;
 	}();
 #	endif
 #elif defined CALC_MIN
-	std::pair<double, double> calc(std::vector<double> data)
-	{
-		assert(!data.empty());
+	std::pair<double, double> calc_stat(std::vector<double> data)
+	{	assert(!data.empty());
 
 		const auto min = *std::min_element(data.begin(), data.end());
 		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd = sd * static_cast<double>(data.size()) / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		sd *= static_cast<double>(data.size()) / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		sd += std::numeric_limits<decltype(sd)>::epsilon();
 		assert(sd >= 1.0);
 		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
+
 		return std::make_pair(min, sd);
 	}
+#	ifndef NDEBUG
+	const auto test_calc = []
+	{	static const std::vector<double> samples = { 5, 2, 4, 7, 4, 4, 5, 5, 9 };
+		constexpr auto min = 2.0;
+		constexpr auto sd = 1.8856180832 / 5.0 * 100.0; // percentages
+
+		const auto [a, d] = calc_stat(samples);
+		assert(std::abs(a / min - 1.0) < 1e-6);
+		assert(std::abs(d / sd - 1.0) < 1e-6);
+		return 0;
+	}();
+#	endif
 #else
 #	error "'calc()' function not defined."
 #endif
 
 	auto action(const cont2_t::value_type& pair)
-	{
-		const auto &itm = pair.second;
-		data_t result{ pair.first };
+	{	data_t result{ pair.first };
+		const auto& itm = pair.second;
 
-		std::tie(result.discreteness_, result.discreteness_prec_) = calc(itm.discreteness_);
-		std::tie(result.call_duration_, result.duration_prec_) = calc(itm.call_duration_);
-		std::tie(result.unit_, result.unit_prec_) = calc(itm.unit_of_currrentthread_work_);
-		const auto uallw = calc(itm.unit_of_allthreads_work_).first;
-		const auto usleep = calc(itm.unit_of_sleeping_process_).first;
+		std::tie(result.discreteness_, result.discreteness_prec_) = calc_stat(itm.discreteness_);
+		std::tie(result.call_duration_, result.duration_prec_) = calc_stat(itm.call_duration_);
+		std::tie(result.unit_, result.unit_prec_) = calc_stat(itm.unit_of_currrentthread_work_);
+		const auto uallw = calc_stat(itm.unit_of_allthreads_work_).first;
+		const auto usleep = calc_stat(itm.unit_of_sleeping_process_).first;
 
 		if (result.unit_ / uallw > 1.2)
 			result.type_ = "Process"s; // The process-clock is affected by the load on all cores.
@@ -491,40 +508,35 @@ namespace measure_functions
 		return result;
 	}
 
-	std::vector<data_t> prepare(cont2_t&& data)
-	{
-		std::vector<data_t> result;
+	std::vector<data_t> prepare(const cont2_t& data)
+	{	std::vector<data_t> result;
 
 		std::transform(data.begin(), data.end(), std::back_inserter(result), action);
 
-		if (g_sort != sort_t::nosort)
-		{
-			static constexpr bool(*sort_predicates[])(const data_t & l, const data_t & r) = {
-				// The order of the elements must match the order of the sort_t enum.
-				less<sort_t::name>,
-				less<sort_t::discreteness>,
-				less<sort_t::duration>,
-				less<sort_t::tick>,
-				less<sort_t::type>,
-			};
-			static_assert(std::size(sort_predicates) == static_cast<std::underlying_type_t<sort_t>>(sort_t::_quantity) - 1);
+		static constexpr bool(*sort_predicates[])(const data_t & l, const data_t & r) = {
+			// The order of the elements must match the order of the sort_t enum.
+			less<sort_t::name>,
+			less<sort_t::discreteness>,
+			less<sort_t::duration>,
+			less<sort_t::tick>,
+			less<sort_t::type>,
+		};
+		static_assert(std::size(sort_predicates) == static_cast<std::underlying_type_t<sort_t>>(sort_t::_quantity));
 
-			auto pred = less<sort_t::discreteness>;
-			if (const auto pos = static_cast<std::underlying_type_t<sort_t>>(g_sort); pos < std::size(sort_predicates))
-				pred = sort_predicates[pos];
+		auto pred = less<sort_t::name>;
+		if (const auto pos = static_cast<std::underlying_type_t<sort_t>>(g_sort); pos < std::size(sort_predicates))
+			pred = sort_predicates[pos];
 
-			std::stable_sort(result.begin(), result.end(), pred);
-		}
+		std::stable_sort(result.begin(), result.end(), pred);
 
 		return result;
 	}
 
 	void work()
-	{
-		auto data = prepare(collect());
+	{	auto data = prepare(collect());
 		std::cout << "\nMeasured properties of time functions:\n" << data << std::endl;
 	}
-} // namespace measure_functions
+} // namespace
 
 vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
 {	
@@ -550,26 +562,22 @@ int main(int argc, char* argv[])
 #endif
 
 	const auto start = std::time(nullptr);
+	parsing_of_parameters(argc, argv);
 	std::cout << "Start: "sv << std::put_time(std::localtime(&start), "%Y.%m.%d %H:%M:%S") << '\n';
 	std::cout << "Build type: "sv << BUILD_TYPE << '\n';
+	std::cout.imbue(locale_with_grouping{ std::cout.getloc() });
 	endl(std::cout);
 
-	struct space_out_t : std::numpunct<char>
-	{	char do_thousands_sep() const override { return '\''; }  // separate with spaces
-		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
-	};
-	std::cout.imbue(std::locale(std::cout.getloc(), new space_out_t));
-
-	params(argc, argv);
 	prefix();
-
 	endl(std::cout);
-	measure_functions::work();
 
+	work();
 	endl(std::cout);
+
 	suffix();
+	endl(std::cout);
 
 	const auto expend = std::time(nullptr) - start;
-	std::cout << "\nTime expend: "sv << std::put_time(std::gmtime(&expend), "%H:%M:%S");
+	std::cout << "Time expend: "sv << std::put_time(std::gmtime(&expend), "%H:%M:%S");
 	endl(std::cout);
 }
