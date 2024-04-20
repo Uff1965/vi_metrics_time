@@ -8,14 +8,16 @@ function(vi_macro_show M)
 	endif()
 endfunction()
 
+#vi_macro_show(MSVC_VERSION)
+
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
-project(vi_metrics_time)
+project(vi_metrics_time LANGUAGES C CXX ASM_MASM)
 
 set(VI_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(VI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/source)
-vi_macro_show(VI_OUT_DIR)
-vi_macro_show(VI_SOURCE_DIR)
+#vi_macro_show(VI_OUT_DIR)
+#vi_macro_show(VI_SOURCE_DIR)
 
 ### Files #####################################################################
 set(FILE_GROUP
@@ -28,10 +30,17 @@ set(FILE_GROUP
   "${VI_SOURCE_DIR}/tm_asm.cpp"
   "${VI_SOURCE_DIR}/tm_standard.cpp"
 )
+
+if(DEFINED WIN32)
+    list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_masm.asm")
+endif()
+
 source_group("Source Files" FILES ${FILE_GROUP})
 list(APPEND SOURCE_FILES ${FILE_GROUP})
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+#set_property(SOURCE "${VI_SOURCE_DIR}/tm_masm.asm" PROPERTY LANGUAGE ASM)
 
 ### Compiler ##################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES

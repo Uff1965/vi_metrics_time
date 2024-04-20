@@ -14,8 +14,24 @@
 
 #define METRIC(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
 
+extern "C" unsigned long long vi_start(void);
+extern "C" unsigned long long vi_finish(void);
+extern "C" unsigned long long vi_test(void);
+extern "C" unsigned long long vi_test2(void);
+extern "C" unsigned long long vi_start2(void);
+extern "C" unsigned long long vi_finish2(void);
+
 namespace vi_mt
 {
+#if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
+    METRIC("vi_start", vi_start);
+    METRIC("vi_finish", vi_finish);
+    METRIC("vi_test", vi_test);
+    METRIC("vi_test2", vi_test2);
+    METRIC("vi_start2", vi_start2);
+    METRIC("vi_finish2", vi_finish2);
+#endif
+
 #ifdef VI_MSC_INTRIN
 #   pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
 
