@@ -42,12 +42,14 @@ namespace
 {
 	using strs_t = std::vector<std::string>;
 	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, _quantity };
+	enum class stat_t: unsigned char { avg, min, _quantity };
 
+	auto g_stat = stat_t::avg;
 	auto g_sort = sort_t::name;
 	auto g_warming = 1'000ms;
 	strs_t g_include;
 	strs_t g_exclude;
-	int g_repeat = 1;
+	unsigned g_repeat = 1U;
 
 	inline auto now() { return vi_mt::now(); }
 
@@ -55,6 +57,65 @@ namespace
 		char do_thousands_sep() const override { return '\''; }  // separate with spaces
 		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
 	};
+
+	template<typename T>
+	T from_string(const char* ptr, std::string_view name);
+		
+	template<>
+	sort_t from_string<sort_t>(const char* ptr, std::string_view name)
+	{	sort_t result;
+
+		if ("name"sv == ptr)
+			result = sort_t::name;
+		else if ("discreteness"sv == ptr)
+			result = sort_t::discreteness;
+		else if ("duration"sv == ptr)
+			result = sort_t::duration;
+		else if ("tick"sv == ptr)
+			result = sort_t::tick;
+		else if ("type"sv == ptr)
+			result = sort_t::type;
+		else
+		{
+			std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+			std::exit(1);
+		}
+
+		return result;
+	}
+
+	template<>
+	stat_t from_string< stat_t>( const char* ptr, std::string_view name)
+	{	stat_t result;
+
+		if ("average"sv == ptr)
+			result = stat_t::avg;
+		else if ("minimum"sv == ptr)
+			result = stat_t::min;
+		else
+		{
+			std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+			std::exit(1);
+		}
+
+		return result;
+	}
+
+	template<>
+	unsigned from_string<unsigned>( const char* ptr, std::string_view name)
+	{	unsigned result;
+
+		try
+		{	result = std::stoul(ptr);
+		}
+		catch (...)
+		{
+			std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+			std::exit(1);
+		}
+
+		return result;
+	}
 
 	void parsing_of_parameters(int argc, char* argv[])
 	{
@@ -70,63 +131,35 @@ namespace
 		{
 			auto ptr = argv[n++];
 			if ("-s"sv == ptr || "--sort"sv == ptr)
-			{
-				if (n >= argc)
-					continue;
-
-				ptr = argv[n++];
-				if ("name"sv == ptr)
-					g_sort = sort_t::name;
-				else if ("discreteness"sv == ptr)
-					g_sort = sort_t::discreteness;
-				else if ("duration"sv == ptr)
-					g_sort = sort_t::duration;
-				else if ("tick"sv == ptr)
-					g_sort = sort_t::tick;
-				else if ("type"sv == ptr)
-					g_sort = sort_t::type;
-				else
-				{	std::cerr << "ERROR: Unknown value for parametr --sort: \'" << ptr << "\'\n";
-					std::exit(1);
-				}
+			{	g_sort = (n < argc && argv[n][0] != '-')? from_string<sort_t>(argv[n++], "sort"sv) : sort_t::discreteness;
+			}
+			else if ("--stat"sv == ptr)
+			{	g_stat = (n < argc && argv[n][0] != '-')? from_string<stat_t>(argv[n++], "stat"sv) : stat_t::min;
 			}
 			else if ("-w"sv == ptr || "--warming"sv == ptr)
-			{
-				if (n >= argc)
-					continue;
-
-				ptr = argv[n++];
-				std::istringstream in{ ptr };
-				std::int64_t d;
-				in >> d;
-				g_warming = ch::milliseconds{ d };
+			{	g_warming = ch::milliseconds{ (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "warming"sv) : 0 };
+			}
+			else if ("-r"sv == ptr || "--repeat"sv == ptr)
+			{	g_repeat = (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "repeat"sv) : 5;
 			}
 			else if ("-i"sv == ptr || "--include"sv == ptr)
-			{
-				if (n >= argc) continue;
+			{	if (n >= argc || argv[n][0] == '-')
+				{	std::cerr << "ERROR: Empty value for parametr --include\n";
+					std::exit(1);
+				}
+
 				g_include.emplace_back(argv[n++]);
 			}
 			else if ("-e"sv == ptr || "--exclude"sv == ptr)
-			{
-				if (n >= argc) continue;
-				g_exclude.emplace_back(argv[n++]);
-			}
-			else if ("-r"sv == ptr || "--repeat"sv == ptr)
-			{
-				g_repeat = 5;
-				if (n >= argc) continue;
-				if ('-' == *argv[n]) continue;
-				ptr = argv[n++];
-
-				g_repeat = atoi(ptr);
-				if(g_repeat <= 0)
-				{	std::cerr << "ERROR: Wrong value for parametr --repeat: \'" << ptr << "\'\n";
+			{	if (n >= argc || argv[n][0] == '-')
+				{	std::cerr << "ERROR: Empty value for parametr --exclude\n";
 					std::exit(1);
 				}
+
+				g_exclude.emplace_back(argv[n++]);
 			}
 			else
-			{
-				auto error = false;
+			{	auto error = false;
 				if ("-h"sv != ptr && "--help"sv != ptr)
 				{	std::cerr << "ERROR: Unknown parameter \'" << ptr << "\'\n";
 					error = true;
@@ -134,11 +167,12 @@ namespace
 
 				std::cout << "\nOptions:\n" <<
 					"-[-h]elp: this help;\n"
-					"-[-w]arming 1|0: by default - ON; Implicit - OFF;\n"
-					"-[-s]sort name|discreteness|duration|tick|type: by default - discreteness;\n"
+					"-[-w]arming 1|0: by default - 1s; implicit - OFF;\n"
+					"-[-s]sort name|discreteness|duration|tick|type: by default - name; implicit - discreteness\n"
+					"--stat average|minimum: by default - average; implicit - minimum\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
-					"-[-r]epeat <N>: number of measurements. 5 by default;\n";
+					"-[-r]epeat <N>: number of measurements. by default - 0; implicit - 5\n";
 
 				std::exit(error ? EXIT_FAILURE : EXIT_SUCCESS);
 			}
@@ -403,7 +437,7 @@ namespace
 	{	std::map<std::string, data2_t, std::less<>> result;
 		misc::progress_t progress{ "Collecting function properties" };
 
-		for (int n = 0; n < g_repeat; ++n)
+		for (unsigned n = 0U; n < g_repeat; ++n)
 		{	const auto meas = measurement(g_include, g_exclude, [n, &progress](double f) { progress((n + f) / g_repeat); });
 
 			for (const auto& [name, m] : meas)
@@ -419,10 +453,7 @@ namespace
 		return result;
 	}
 
-//#define CALC_SLICE
-#define CALC_MIN
-#ifdef CALC_SLICE
-	std::pair<double, double> calc_stat(std::vector<double> data)
+	std::pair<double, double> calc_stat_avg(std::vector<double> data)
 	{	assert(!data.empty());
 
 		const auto begin = data.begin();
@@ -448,19 +479,19 @@ namespace
 		return std::make_pair(aveg, sd);
 	}
 #	ifndef NDEBUG
-	const auto test_calc = []
+	const auto test_calc_stat_avg = []
 	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} see function calc_stat !!!
 		constexpr auto average = 4.142857143;
 		constexpr auto sd = 0.9897433186 / average * 100.0; // percentages
 
-		const auto [a, d] = calc_stat(samples);
+		const auto [a, d] = calc_stat_avg(samples);
 		assert(std::abs(a / average - 1.0) < 1e-6);
 		assert(std::abs(d / sd - 1.0) < 1e-6);
 		return 0;
 	}();
 #	endif
-#elif defined CALC_MIN
-	std::pair<double, double> calc_stat(std::vector<double> data)
+
+	std::pair<double, double> calc_stat_min(std::vector<double> data)
 	{	assert(!data.empty());
 
 		const auto min = *std::min_element(data.begin(), data.end());
@@ -473,20 +504,29 @@ namespace
 		return std::make_pair(min, sd);
 	}
 #	ifndef NDEBUG
-	const auto test_calc = []
+	const auto test_calc_stat_min = []
 	{	static const std::vector<double> samples = { 5, 2, 4, 7, 4, 4, 5, 5, 9 };
 		constexpr auto min = 2.0;
 		constexpr auto sd = 1.8856180832 / 5.0 * 100.0; // percentages
 
-		const auto [a, d] = calc_stat(samples);
+		const auto [a, d] = calc_stat_min(samples);
 		assert(std::abs(a / min - 1.0) < 1e-6);
 		assert(std::abs(d / sd - 1.0) < 1e-6);
 		return 0;
 	}();
 #	endif
-#else
-#	error "'calc()' function not defined."
-#endif
+
+	std::pair<double, double> calc_stat(std::vector<double> data)
+	{
+		decltype(calc_stat)* calc_stat = nullptr;
+
+		if (g_stat == stat_t::avg)
+			calc_stat = calc_stat_avg;
+		else
+			calc_stat = calc_stat_min;
+
+		return calc_stat(std::move(data));
+	}
 
 	auto action(const cont2_t::value_type& pair)
 	{	data_t result{ pair.first };

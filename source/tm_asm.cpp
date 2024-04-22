@@ -14,76 +14,87 @@
 
 #define METRIC(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
 
-extern "C" unsigned long long vi_start(void);
-extern "C" unsigned long long vi_finish(void);
-extern "C" unsigned long long vi_test(void);
-extern "C" unsigned long long vi_test2(void);
-extern "C" unsigned long long vi_start2(void);
-extern "C" unsigned long long vi_finish2(void);
+extern "C" unsigned long long vi_asm_rdtsc(void);
+extern "C" unsigned long long vi_asm_rdtscp(void);
+extern "C" unsigned long long vi_asm_cpuid_rdtsc(void);
+extern "C" unsigned long long vi_asm_rdtscp_cpuid(void);
+extern "C" unsigned long long vi_asm_rdtscp_lfence(void);
+extern "C" unsigned long long vi_asm_mfence_lfence_rdtsc(void);
 
 namespace vi_mt
 {
 #if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
-    METRIC("vi_start", vi_start);
-    METRIC("vi_finish", vi_finish);
-    METRIC("vi_test", vi_test);
-    METRIC("vi_test2", vi_test2);
-    METRIC("vi_start2", vi_start2);
-    METRIC("vi_finish2", vi_finish2);
+    METRIC("RDTSC_ASM", vi_asm_rdtsc);
+    METRIC("RDTSCP_ASM", vi_asm_rdtscp);
+    METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
+    METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
+    METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
+    METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
 #endif
 
 #ifdef VI_MSC_INTRIN
 #   pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
 
-    inline count_t tm_rdtsc_cpuid() {
-        int _[4];
-        __cpuid(_, 0);
-        return __rdtsc();
-    }
-    METRIC("RDTSC & CPUID", tm_rdtsc_cpuid);
-
     inline count_t tm_rdtsc() {
         return __rdtsc();
     }
-    METRIC("RDTSC", tm_rdtsc);
+    METRIC("RDTSC_INTRINSIC", tm_rdtsc);
+
+    inline count_t tm_rdtscp() {
+        unsigned int aux;
+        return __rdtscp(&aux);
+    }
+    METRIC("RDTSCP_INTRINSIC", tm_rdtsc);
+
+    inline count_t tm_rdtsc_cpuid() {
+        int cpuInfo[4];
+        __cpuid(cpuInfo, 0);
+        return __rdtsc();
+    }
+    METRIC("CPUID+RDTSC_INTRINSIC", tm_rdtsc_cpuid);
+
+    inline count_t tm_rdtscp_cpuid() {
+        unsigned int aux;
+        const auto result = __rdtscp(&aux);
+        int cpuInfo[4];
+        __cpuid(cpuInfo, 0);
+        return result;
+    }
+    METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
     inline count_t tm_rdtsc_seq_cst() {
         std::atomic_thread_fence(std::memory_order_seq_cst);
-        auto result = __rdtsc();
+        const auto result = __rdtsc();
         std::atomic_thread_fence(std::memory_order_seq_cst);
         return result;
     }
-    METRIC("RDTSC & seq_cst", tm_rdtsc_seq_cst);
+    METRIC("seq_cst+RDTSC+seq_cst", tm_rdtsc_seq_cst);
 
     inline count_t tm_rdtsc_acq_rel() {
         std::atomic_thread_fence(std::memory_order_acq_rel);
-        auto result = __rdtsc();
+        const auto result = __rdtsc();
         std::atomic_thread_fence(std::memory_order_acq_rel);
         return result;
     }
-    METRIC("RDTSC & acq_rel", tm_rdtsc_acq_rel);
-
-    inline count_t tm_rdtscp() {
-        unsigned int _;
-        return __rdtscp(&_);
-    }
-    METRIC("RDTSCP", tm_rdtscp);
+    METRIC("acq_rel+RDTSC+acq_rel", tm_rdtsc_acq_rel);
 
     inline count_t tm_rdtscp_seq_cst() {
-        unsigned int _;
+        unsigned int aux;
         std::atomic_thread_fence(std::memory_order_seq_cst);
-        return __rdtscp(&_);
+        const auto result = __rdtscp(&aux);
         std::atomic_thread_fence(std::memory_order_seq_cst);
+        return result;
     }
-    METRIC("RDTSCP & seq_cst", tm_rdtscp_seq_cst);
+    METRIC("seq_cst+RDTSCP+seq_cst", tm_rdtscp_seq_cst);
 
     inline count_t tm_rdtscp_acq_rel() {
-        unsigned int _;
+        unsigned int aux;
         std::atomic_thread_fence(std::memory_order_acq_rel);
-        return __rdtscp(&_);
+        const auto result = __rdtscp(&aux);
         std::atomic_thread_fence(std::memory_order_acq_rel);
+        return result;
     }
-    METRIC("RDTSCP & acq_rel", tm_rdtscp_acq_rel);
+    METRIC("acq_rel+RDTSCP+acq_rel", tm_rdtscp_acq_rel);
 
 #elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
 
