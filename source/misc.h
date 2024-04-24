@@ -13,8 +13,10 @@ namespace misc
 {
 	namespace ch = std::chrono;
 
+	extern ch::milliseconds g_warming;
+
 	[[nodiscard]] double round(double num, unsigned char prec = 2, unsigned char dec = 1);
-	void warming(bool all = false, ch::milliseconds d = ch::seconds{ 1 }, bool silent = false);
+	void warming(bool all = false, ch::milliseconds d = g_warming, bool silent = false);
 
 	struct duration_t : ch::duration<double> // A new type is defined to be able to overload the 'operator<'.
 	{

@@ -11,7 +11,7 @@ option casemap:none ; Директива option указывает MASM сделать все символы чувств
 
 ;оператор public указывает, что функция будет видна вне исходного/объектного файла MASM.
 
-;***************************************************************
+;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Clear functions:
 public vi_asm_rdtsc, vi_asm_rdtscp
 
@@ -28,8 +28,10 @@ vi_asm_rdtscp PROC
 	or	rax, rdx
 	ret	0
 vi_asm_rdtscp ENDP
+;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-;***************************************************************
+
+;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Functions using CPUID:
 public vi_asm_cpuid_rdtsc, vi_asm_rdtscp_cpuid
 
@@ -64,9 +66,10 @@ vi_asm_rdtscp_cpuid PROC
 	pop	rbx
 	ret	0
 vi_asm_rdtscp_cpuid ENDP
+;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-;***************************************************************
+;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Functions using FENCE:
 public vi_asm_mfence_lfence_rdtsc, vi_asm_rdtscp_lfence
 
@@ -86,5 +89,6 @@ vi_asm_rdtscp_lfence PROC
 	or	rax, rdx
 	ret	0
 vi_asm_rdtscp_lfence ENDP
+;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 END

@@ -14,6 +14,7 @@
 #include <map>
 #include <numeric>
 #include <ostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -38,6 +39,11 @@
 using namespace std::literals;
 namespace ch = std::chrono;
 
+namespace misc
+{
+	ch::milliseconds g_warming = 1'000ms;
+}
+
 namespace
 {
 	using strs_t = std::vector<std::string>;
@@ -46,17 +52,9 @@ namespace
 
 	auto g_stat = stat_t::avg;
 	auto g_sort = sort_t::name;
-	auto g_warming = 1'000ms;
+	auto g_repeat = 1U;
 	strs_t g_include;
 	strs_t g_exclude;
-	unsigned g_repeat = 1U;
-
-	inline auto now() { return vi_mt::now(); }
-
-	struct space_out : std::numpunct<char> {
-		char do_thousands_sep() const override { return '\''; }  // separate with spaces
-		std::string do_grouping() const override { return "\3"; } // groups of 1 digit
-	};
 
 	template<typename T>
 	T from_string(const char* ptr, std::string_view name);
@@ -76,8 +74,7 @@ namespace
 		else if ("type"sv == ptr)
 			result = sort_t::type;
 		else
-		{
-			std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+		{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
 			std::exit(1);
 		}
 
@@ -93,8 +90,7 @@ namespace
 		else if ("minimum"sv == ptr)
 			result = stat_t::min;
 		else
-		{
-			std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+		{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
 			std::exit(1);
 		}
 
@@ -102,34 +98,26 @@ namespace
 	}
 
 	template<>
-	unsigned from_string<unsigned>( const char* ptr, std::string_view name)
-	{	unsigned result;
-
-		try
-		{	result = std::stoul(ptr);
-		}
-		catch (...)
-		{
-			std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
-			std::exit(1);
-		}
-
-		return result;
+	unsigned from_string<unsigned>(const char* ptr, std::string_view name) try
+	{	return std::stoul(ptr);
+	}
+	catch (...)
+	{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+		std::exit(1);
 	}
 
 	void parsing_of_parameters(int argc, char* argv[])
 	{
-		auto fn = [](const std::string& i, const char* s) {
-			std::ostringstream os;
-			os << i << " "s << std::quoted(s);
-			return os.str();
+		auto fn = [](const std::string& i, const char* s)
+			{	std::ostringstream os;
+				os << i << " "s << std::quoted(s);
+				return os.str();
 			};
 		std::cout << std::accumulate(argv, &argv[argc], "Command line:"s, fn) << "\n";
 		endl(std::cout);
 
 		for (int n = 1; n < argc;)
-		{
-			auto ptr = argv[n++];
+		{	auto ptr = argv[n++];
 			if ("-s"sv == ptr || "--sort"sv == ptr)
 			{	g_sort = (n < argc && argv[n][0] != '-')? from_string<sort_t>(argv[n++], "sort"sv) : sort_t::discreteness;
 			}
@@ -137,7 +125,7 @@ namespace
 			{	g_stat = (n < argc && argv[n][0] != '-')? from_string<stat_t>(argv[n++], "stat"sv) : stat_t::min;
 			}
 			else if ("-w"sv == ptr || "--warming"sv == ptr)
-			{	g_warming = ch::milliseconds{ (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "warming"sv) : 0 };
+			{	misc::g_warming = ch::milliseconds{ (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "warming"sv) : 0 };
 			}
 			else if ("-r"sv == ptr || "--repeat"sv == ptr)
 			{	g_repeat = (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "repeat"sv) : 5;
@@ -172,7 +160,7 @@ namespace
 					"--stat average|minimum: by default - average; implicit - minimum\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
-					"-[-r]epeat <N>: number of measurements. by default - 0; implicit - 5\n";
+					"-[-r]epeat <N>: number of measurements. by default - 1; implicit - 5\n";
 
 				std::exit(error ? EXIT_FAILURE : EXIT_SUCCESS);
 			}
@@ -187,7 +175,7 @@ namespace
 		std::string buff("Unknown");
 		auto len = static_cast<DWORD>(buff.size());
 		do {
-			buff.resize(len);
+			buff.resize(len); //-V106
 		} while (ERROR_MORE_DATA == ::RegGetValueA(HKEY_LOCAL_MACHINE, subkey, value, RRF_RT_REG_SZ, NULL, buff.data(), &len)); //-V2571
 		std::cout << "Processor: " << buff;
 #elif defined(__linux__)
@@ -258,14 +246,15 @@ namespace
 			{
 				static constexpr auto F = 100e-9 * 1e3; // 100ns interval in 'ms'.
 				std::cout
-					<< "\tPeriodic time adjustments \'GetSystemTimeAdjustment()\':"
-					<< " TimeAdjustment = " << static_cast<double>(TimeAdjustment) * F << "ms;"
-					<< " TimeIncrement = " << static_cast<double>(TimeIncrement) * F << "ms;"
-					<< " TimeAdjustmentDisabled = " << std::boolalpha << (0 != TimeAdjustmentDisabled) << ";"
+					<< "\tPeriodic time adjustments \'GetSystemTimeAdjustment()\':\n"
+					<< "\t\tTimeAdjustment = " << static_cast<double>(TimeAdjustment) * F << "ms;\n"
+					<< "\t\tTimeIncrement = " << static_cast<double>(TimeIncrement) * F << "ms;\n"
+					<< "\t\tTimeAdjustmentDisabled = " << std::boolalpha << (0 != TimeAdjustmentDisabled) << ";"
 					<< "\n";
 			}
 			else
-				std::cout << "GetSystemTimeAdjustment() -> " << GetLastError() << " Error!\n";
+			{	std::cout << "GetSystemTimeAdjustment() -> " << GetLastError() << " Error!\n";
+			}
 		}
 #elif defined __linux__
 		std::cout
@@ -342,9 +331,6 @@ namespace
 		double discreteness_;
 		double unit_;
 		std::string type_;
-		//double unit_of_sleeping_process_;
-		//double unit_of_currrentthread_work_;
-		//double unit_of_allthreads_work_;
 
 		double duration_prec_;
 		double discreteness_prec_;
@@ -383,20 +369,43 @@ namespace
 
 	std::ostream& operator<<(std::ostream& out, const std::vector<data_t>& data)
 	{
-		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-"}) << "\n";
+		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-" }) << "\n";
+		{
+			str_out sort_line = { "", "", "", "", "" };
+			static constexpr char marker[] = "Sorted";
+			switch (g_sort)
+			{
+				case sort_t::discreteness:
+					sort_line.disc_ = marker;
+					break;
+				case sort_t::duration:
+					sort_line.durn_ = marker;
+					break;
+				case sort_t::tick:
+					sort_line.val_ = marker;
+					break;
+				case sort_t::type:
+					sort_line.val_sleep_ = marker;
+					break;
+				case sort_t::name:
+				default:
+					sort_line.name_ = marker;
+					break;
+			}
+			print_itm(out, sort_line) << "\n";
+		}
 
 		for (const auto& m : data)
 		{
 			auto prn_sd = [](double f)
-			{
-				std::string result = "<err>";
-				if (!std::isnan(f))
-				{	std::ostringstream os;
-					os << std::setprecision(1) << std::fixed << misc::round(f, 2);
-					result = os.str() + "%";
-				}
-				return result;
-			};
+				{	std::string result = "<err>";
+					if (!std::isnan(f))
+					{	std::ostringstream os;
+						os << std::setprecision(1) << std::fixed << misc::round(f, 2);
+						result = os.str() + "%";
+					}
+					return result;
+				};
 
 			str_out s =
 			{	m.name_,
@@ -415,9 +424,9 @@ namespace
 
 	vi_mt::cont_t measurement(const strs_t& inc, const strs_t& exc, const std::function<void(double)>& progress)
 	{	auto filter = [&inc, &exc](std::string_view s)
-		{	auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
-			return !(std::any_of(exc.begin(), exc.end(), pred) || (!inc.empty() && std::none_of(inc.begin(), inc.end(), pred)));
-		};
+			{	auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
+				return !(std::any_of(exc.begin(), exc.end(), pred) || (!inc.empty() && std::none_of(inc.begin(), inc.end(), pred)));
+			};
 
 		return vi_mt::metric_base_t::action(filter, progress);
 	}
@@ -453,17 +462,17 @@ namespace
 		return result;
 	}
 
-	std::pair<double, double> calc_stat_avg(std::vector<double> data)
+	std::pair<double, double> calc_stat_avg(std::vector<double> data) //-V813
 	{	assert(!data.empty());
 
 		const auto begin = data.begin();
 		auto end = data.end();
-		auto size = static_cast<double>(data.size());
+		auto size = static_cast<double>(data.size()); //-V203
 
 		// Average.
 		auto aveg = std::accumulate(begin, end, 0.0) / size;
 
-		if (const auto it = std::remove_if(begin, end, [max = 1.2 * aveg](auto v) {return v > max; }); it != end)
+		if (const auto it = std::remove_if(begin, end, [aveg](auto v) {return v - aveg > std::numeric_limits<decltype(aveg)>::epsilon(); }); it != end)
 		{	end = it;
 			size = static_cast<double>(std::distance(begin, end));
 			aveg = std::accumulate(begin, end, 0.0) / size;
@@ -496,7 +505,7 @@ namespace
 
 		const auto min = *std::min_element(data.begin(), data.end());
 		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd *= static_cast<double>(data.size()) / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2);
+		sd *= static_cast<double>(data.size()) / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2); //-V203
 		sd += std::numeric_limits<decltype(sd)>::epsilon();
 		assert(sd >= 1.0);
 		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
@@ -580,15 +589,20 @@ namespace
 
 vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
 {	
+	decltype(s_measurers_) v;
+	if (filter)
+	{	std::for_each(s_measurers_.begin(), s_measurers_.end(), [&v, &filter](const auto& f) { if (filter(f.get().name())) v.emplace_back(f); });
+	}
+	else
+	{	v = s_measurers_;
+	}
+	std::shuffle(v.begin(), v.end(), std::mt19937{ std::random_device{}() });
+
 	cont_t result;
-	for (std::size_t n = 0; n < s_measurers_.size(); ++n)
-	{	if (const auto& f = s_measurers_[n].get(); !filter || filter(f.name()))
-		{	auto fn = [&pb, n, sz = s_measurers_.size()](double part) {if (pb) pb((static_cast<double>(n) + part) / static_cast<double>(sz)); };
-			result.emplace(f.name(), f.measurement(fn));
-		}
-		else if (pb)
-		{	pb(static_cast<double>(n + 1) / static_cast<double>(s_measurers_.size()));
-		}
+	for (std::size_t n = 0; n < v.size(); ++n)
+	{	auto fn = [&pb, n, sz = v.size()](double part) {if (pb) pb((static_cast<double>(n) + part) / static_cast<double>(sz)); }; //-V203
+		const auto& f = v[n].get();
+		result.emplace(f.name(), f.measurement(fn));
 	}
 	return result;
 }
@@ -600,13 +614,13 @@ int main(int argc, char* argv[])
 #else
 	static constexpr auto BUILD_TYPE = "Debug"sv;
 #endif
-
 	const auto start = std::time(nullptr);
-	parsing_of_parameters(argc, argv);
+	std::cout << "Build: " __DATE__ " " __TIME__ " " << BUILD_TYPE << "\n";
 	std::cout << "Start: "sv << std::put_time(std::localtime(&start), "%Y.%m.%d %H:%M:%S") << '\n';
-	std::cout << "Build type: "sv << BUILD_TYPE << '\n';
 	std::cout.imbue(locale_with_grouping{ std::cout.getloc() });
 	endl(std::cout);
+
+	parsing_of_parameters(argc, argv);
 
 	prefix();
 	endl(std::cout);

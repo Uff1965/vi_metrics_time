@@ -91,10 +91,8 @@ namespace vi_mt
 		using tick_t = std::invoke_result_t<decltype(vi_tmGetTicks)>;
 		auto get_pair = []
 		{	std::this_thread::yield(); // To minimize the likelihood of interrupting the flow between measurements.
-			(void)vi_tmGetTicks(); // Preloading a function into cache
 			(void)now(); // Preloading a function into cache
-
-			auto next = vi_tmGetTicks();
+			auto next = vi_tmGetTicks(); // Preloading a function into cache
 			for (const auto prev = vi_tmGetTicks(); prev >= next; )
 			{	next = vi_tmGetTicks();
 			}
@@ -115,14 +113,7 @@ namespace vi_mt
 
 	template<const char* Name, auto Func, auto... Args>
 	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_process_sleep()
-	{	const auto result = measurement_unit_aux([](auto limit) {std::this_thread::sleep_until(limit); });
-
-		// Naive are trying to wake up the processor core after Sleep.
-		for (const auto tp = now() + ch::milliseconds{ 500 }; now() < tp; )
-		{/**/
-		}
-
-		return result;
+	{	return measurement_unit_aux([](auto limit) {std::this_thread::sleep_until(limit); });
 	}
 
 	template<const char* Name, auto Func, auto... Args>
@@ -140,10 +131,9 @@ namespace vi_mt
 			std::generate(threads.begin(), threads.end(), [&done] {return std::thread{ [&done] { while (!done) {/**/ }}};}); //-V776 Potentially infinite loop
 
 			while (now() < limit)
-			{/**/
-			}
-			done = true;
+			{/**/}
 
+			done = true;
 			std::for_each(threads.begin(), threads.end(), [](auto& t) {t.join(); });
 		};
 
@@ -153,15 +143,16 @@ namespace vi_mt
 	template<const char* Name, auto Func, auto... Args>
 	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_call_duration()
 	{
-		static constexpr auto CNT = 100U;
+		static constexpr auto CNT = 1'000U;
 		volatile std::invoke_result_t<decltype(vi_tmGetTicks)> _;
 
 		auto start = [&_]
 		{	std::this_thread::yield(); // To minimize the likelihood of interrupting the flow between measurements.
 			_ = vi_tmGetTicks(); // Preload
+
 			// Are waiting for the start of a new time interval.
-			auto next = now();
-			for (const auto prev = next; next <= prev; )
+			auto next = now(); // Preload
+			for (const auto prev = now(); prev >= next; )
 			{	next = now();
 			}
 			return next;
@@ -172,7 +163,7 @@ namespace vi_mt
 		{	_ = vi_tmGetTicks();
 		}
 		auto e = now();
-		const auto diff1 = e - s;
+		const auto base = e - s;
 
 		static constexpr auto CNT_EXT = 20U;
 		s = start();
@@ -186,28 +177,27 @@ namespace vi_mt
 			_ = vi_tmGetTicks(); _ = vi_tmGetTicks(); _ = vi_tmGetTicks(); _ = vi_tmGetTicks(); _ = vi_tmGetTicks();
 		}
 		e = now();
-		const auto diff2 = e - s;
+		const auto extent = e - s;
 
-//		assert(diff2 > diff1);
-		const auto diff = diff2 - diff1;
+		const auto diff = extent - base;
 		return misc::duration_t{ std::max(decltype(diff){0}, diff) / static_cast<double>(CNT * CNT_EXT) };
 	}
 
 	template<const char* Name, auto Func, auto... Args>
 	inline item_t metric_t<Name, Func, Args...>::measurement(const std::function<void(double)>& progress) const
 	{
-		misc::warming(false, ch::milliseconds{ 250 }, true);
+		misc::warming(false, misc::g_warming, true);
 
 		item_t result;
-		result.call_duration_ = measurement_call_duration();
+		result.unit_of_currrentthread_work_ = measurement_unit_one_thread_work(); // The first, because it can warming the processor.
 		progress(1.0 / 5.);
 		result.discreteness_ = measurement_discreteness();
 		progress(2.0 / 5.);
-		result.unit_of_sleeping_process_ = measurement_unit_process_sleep();
+		result.call_duration_ = measurement_call_duration();
 		progress(3.0 / 5.);
-		result.unit_of_currrentthread_work_ = measurement_unit_one_thread_work();
-		progress(4.0 / 5.);
 		result.unit_of_allthreads_work_ = measurement_unit_all_threads_work();
+		progress(4.0 / 5.);
+		result.unit_of_sleeping_process_ = measurement_unit_process_sleep(); // The latter, because it can reduce the processor frequency.
 		progress(5.0 / 5.);
 		return result;
 	}
