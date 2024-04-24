@@ -272,13 +272,13 @@ namespace
 
 			std::cout
 				<< "\tResolution (precision) \'clock_getres(CLOCK_REALTIME)\': " 
-				<< clock_getres(CLOCK_REALTIME) << ";";
+				<< clock_getres(CLOCK_REALTIME) << ";\n";
 			std::cout
 				<< "\tResolution (precision) \'clock_getres(CLOCK_MONOTONIC)\': "
-				<< clock_getres(CLOCK_MONOTONIC) << ";";
+				<< clock_getres(CLOCK_MONOTONIC) << ";\n";
 			std::cout
 				<< "\tResolution (precision) \'clock_getres(CLOCK_PROCESS_CPUTIME_ID)\': "
-				<< clock_getres(CLOCK_PROCESS_CPUTIME_ID) << ";";
+				<< clock_getres(CLOCK_PROCESS_CPUTIME_ID) << ";\n";
 			std::cout
 				<< "\tResolution (precision) \'clock_getres(CLOCK_THREAD_CPUTIME_ID)\': "
 				<< clock_getres(CLOCK_THREAD_CPUTIME_ID) << ";";
