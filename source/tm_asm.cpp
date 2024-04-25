@@ -10,6 +10,8 @@
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64)) // MS compiler for x64 or ARM64EC
 #	include <intrin.h>
 #	define VI_MSC_INTRIN
+#elif defined(__x86_64__) || defined(__amd64__) 
+#   include <x86intrin.h>
 #endif
 
 #define METRIC(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
@@ -57,6 +59,16 @@ namespace vi_mt
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
 #elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
+    inline count_t tm_rdtsc() {
+        return __rdtsc();
+    }
+    METRIC("RDTSC_INTRINSIC", tm_rdtsc);
+
+    inline count_t tm_rdtscp() {
+        unsigned int aux;
+        return __rdtscp(&aux);
+    }
+    METRIC("RDTSCP_INTRINSIC", tm_rdtsc);
 
 	inline count_t vi_asm_rdtsc()
 	{   uint64_t low, high;
