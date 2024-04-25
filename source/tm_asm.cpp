@@ -14,24 +14,17 @@
 
 #define METRIC(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
 
-extern "C" unsigned long long vi_asm_rdtsc(void);
-extern "C" unsigned long long vi_asm_rdtscp(void);
-extern "C" unsigned long long vi_asm_cpuid_rdtsc(void);
-extern "C" unsigned long long vi_asm_rdtscp_cpuid(void);
-extern "C" unsigned long long vi_asm_rdtscp_lfence(void);
-extern "C" unsigned long long vi_asm_mfence_lfence_rdtsc(void);
+#ifdef VI_MSC_INTRIN
+    extern "C" unsigned long long vi_asm_rdtsc(void);
+    extern "C" unsigned long long vi_asm_rdtscp(void);
+    extern "C" unsigned long long vi_asm_cpuid_rdtsc(void);
+    extern "C" unsigned long long vi_asm_rdtscp_cpuid(void);
+    extern "C" unsigned long long vi_asm_rdtscp_lfence(void);
+    extern "C" unsigned long long vi_asm_mfence_lfence_rdtsc(void);
+#endif
 
 namespace vi_mt
 {
-#if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
-    METRIC("RDTSC_ASM", vi_asm_rdtsc);
-    METRIC("RDTSCP_ASM", vi_asm_rdtscp);
-    METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
-    METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
-    METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
-    METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
-#endif
-
 #ifdef VI_MSC_INTRIN
 #   pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
 
@@ -98,20 +91,66 @@ namespace vi_mt
 
 #elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
 
-    //inline count_t tm_rdtsc() {
-    //    uint64_t low, high;
-    //    __asm__ volatile("rdtsc\n" : "=a"(low), "=d"(high));
-    //    return (high << 32) | low;
-    //}
-    //METRIC("rdtsc", tm_rdtsc);
+	inline count_t vi_asm_rdtsc()
+	{   uint64_t low, high;
+		__asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
+		return (high << 32) | low;
+	}
+	METRIC("RDTSC_ASM", vi_asm_rdtsc);
 
-    inline count_t tm_rdtscp() {
-        uint32_t aux;
+	inline count_t vi_asm_rdtscp()
+	{   uint32_t aux;
         uint64_t low, high;
-        __asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
+		__asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
+		return (high << 32) | low;
+	}
+	METRIC("RDTSCP_ASM", vi_asm_rdtscp);
+
+    inline count_t vi_asm_cpuid_rdtsc()
+    {
+        uint64_t low, high;
+        __asm__ volatile("push rbx\n");
+        __asm__ volatile("xor eax, eax\n");
+        __asm__ volatile("xor ecx, ecx\n");
+        __asm__ volatile("cpuid\n");
+        __asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
+        __asm__ volatile("pop rbx\n");
         return (high << 32) | low;
     }
-    METRIC("rdtscp", tm_rdtscp);
+    METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
+
+    inline count_t vi_asm_rdtscp_cpuid()
+    {
+        uint32_t aux;
+        uint64_t low, high;
+        __asm__ volatile("push rbx\n");
+        __asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
+        __asm__ volatile("xor eax, eax\n");
+        __asm__ volatile("xor ecx, ecx\n");
+        __asm__ volatile("cpuid\n");
+        __asm__ volatile("pop rbx\n");
+        return (high << 32) | low;
+    }
+    METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
+
+    inline count_t vi_asm_mfence_lfence_rdtsc()
+    {
+        uint64_t low, high;
+        __asm__ volatile("mfence\n");
+        __asm__ volatile("lfence\n");
+        __asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
+        return (high << 32) | low;
+    }
+    METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
+
+	inline count_t vi_asm_rdtscp_lfence()
+	{   uint32_t aux;
+        uint64_t low, high;
+		__asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
+        __asm__ volatile("lfence\n");
+		return (high << 32) | low;
+	}
+	METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
 
 #elif __ARM_ARCH >= 8 // ARMv8 (RaspberryPi4)
 
@@ -125,4 +164,14 @@ namespace vi_mt
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
 #endif
+
+#if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
+    METRIC("RDTSC_ASM", vi_asm_rdtsc);
+    METRIC("RDTSCP_ASM", vi_asm_rdtscp);
+    METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
+    METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
+    METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
+    METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
+#endif
+
 } // namespace vi_mt
