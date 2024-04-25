@@ -480,10 +480,10 @@ namespace
 
 		// Standard Deviation in percentage.
 		auto sd = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd *= size / std::pow(std::accumulate(begin, end, 0.0), 2);
+		sd *= size / std::pow(std::accumulate(begin, end, 0.0), 2.0);
 		sd += std::numeric_limits<decltype(sd)>::epsilon();
 		assert(sd >= 1.0);
-		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
+		sd = (sd > 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
 
 		return std::make_pair(aveg, sd);
 	}
