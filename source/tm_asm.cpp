@@ -20,6 +20,7 @@
     extern "C" unsigned long long vi_asm_cpuid_rdtsc(void);
     extern "C" unsigned long long vi_asm_rdtscp_cpuid(void);
     extern "C" unsigned long long vi_asm_rdtscp_lfence(void);
+    extern "C" unsigned long long vi_asm_lfence_rdtsc(void);
     extern "C" unsigned long long vi_asm_mfence_lfence_rdtsc(void);
 #endif
 
@@ -55,40 +56,6 @@ namespace vi_mt
     }
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
-    inline count_t tm_rdtsc_seq_cst() {
-        std::atomic_thread_fence(std::memory_order_seq_cst);
-        const auto result = __rdtsc();
-        std::atomic_thread_fence(std::memory_order_seq_cst);
-        return result;
-    }
-    METRIC("seq_cst+RDTSC+seq_cst", tm_rdtsc_seq_cst);
-
-    inline count_t tm_rdtsc_acq_rel() {
-        std::atomic_thread_fence(std::memory_order_acq_rel);
-        const auto result = __rdtsc();
-        std::atomic_thread_fence(std::memory_order_acq_rel);
-        return result;
-    }
-    METRIC("acq_rel+RDTSC+acq_rel", tm_rdtsc_acq_rel);
-
-    inline count_t tm_rdtscp_seq_cst() {
-        unsigned int aux;
-        std::atomic_thread_fence(std::memory_order_seq_cst);
-        const auto result = __rdtscp(&aux);
-        std::atomic_thread_fence(std::memory_order_seq_cst);
-        return result;
-    }
-    METRIC("seq_cst+RDTSCP+seq_cst", tm_rdtscp_seq_cst);
-
-    inline count_t tm_rdtscp_acq_rel() {
-        unsigned int aux;
-        std::atomic_thread_fence(std::memory_order_acq_rel);
-        const auto result = __rdtscp(&aux);
-        std::atomic_thread_fence(std::memory_order_acq_rel);
-        return result;
-    }
-    METRIC("acq_rel+RDTSCP+acq_rel", tm_rdtscp_acq_rel);
-
 #elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
 
 	inline count_t vi_asm_rdtsc()
@@ -108,7 +75,7 @@ namespace vi_mt
 
     inline count_t vi_asm_cpuid_rdtsc()
     {
-        __asm__ volatile("xor %%rax, %%rax"::: "%rax");
+        __asm__ volatile("xor %%eax, %%eax" ::: "%eax");
         __asm__ volatile("cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
         unsigned long long low, high;
         __asm__ volatile("rdtsc": "=a" (low), "=d" (high));
@@ -126,6 +93,15 @@ namespace vi_mt
         return (high << 32) | low;
     }
     METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
+
+    inline count_t vi_asm_lfence_rdtsc()
+    {
+        uint64_t low, high;
+        __asm__ volatile("lfence");
+        __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
+        return (high << 32) | low;
+    }
+    METRIC("LFENCE+RDTSC_ASM", vi_asm_lfence_rdtsc);
 
     inline count_t vi_asm_mfence_lfence_rdtsc()
     {
@@ -164,6 +140,7 @@ namespace vi_mt
     METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
     METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
     METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
+    METRIC("LFENCE+RDTSC_ASM", vi_asm_lfence_rdtsc);
     METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
 #endif
 
