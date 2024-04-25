@@ -108,18 +108,20 @@ namespace vi_mt
 
     inline count_t vi_asm_cpuid_rdtsc()
     {
-        uint64_t low, high;
+        __asm__ volatile("xor %%rax, %%rax"::: "%rax");
         __asm__ volatile("cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
-        __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
+        unsigned long long low, high;
+        __asm__ volatile("rdtsc": "=a" (low), "=d" (high));
         return (high << 32) | low;
     }
     METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
 
     inline count_t vi_asm_rdtscp_cpuid()
     {
-        uint32_t aux;
-        uint64_t low, high;
+        unsigned long aux;
+        unsigned long long low, high;
         __asm__ volatile("rdtscp" : "=a" (low), "=d" (high), "=c" (aux));
+        __asm__ volatile("xor %%rax, %%rax"::: "%rax");
         __asm__ volatile("cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
         return (high << 32) | low;
     }
