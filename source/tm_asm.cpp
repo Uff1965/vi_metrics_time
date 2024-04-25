@@ -93,7 +93,7 @@ namespace vi_mt
 
 	inline count_t vi_asm_rdtsc()
 	{   uint64_t low, high;
-		__asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
+		__asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
 		return (high << 32) | low;
 	}
 	METRIC("RDTSC_ASM", vi_asm_rdtsc);
@@ -101,7 +101,7 @@ namespace vi_mt
 	inline count_t vi_asm_rdtscp()
 	{   uint32_t aux;
         uint64_t low, high;
-		__asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
+		__asm__ volatile("rdtscp" : "=a" (low), "=d" (high), "=c" (aux));
 		return (high << 32) | low;
 	}
 	METRIC("RDTSCP_ASM", vi_asm_rdtscp);
@@ -129,7 +129,7 @@ namespace vi_mt
     {
         uint64_t low, high;
         __asm__ volatile("mfence; lfence;");
-        __asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
+        __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
         return (high << 32) | low;
     }
     METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
@@ -137,8 +137,8 @@ namespace vi_mt
 	inline count_t vi_asm_rdtscp_lfence()
 	{   uint32_t aux;
         uint64_t low, high;
-		__asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
-        __asm__ volatile("lfence\n");
+		__asm__ volatile("rdtscp" : "=a" (low), "=d" (high), "=c" (aux));
+        __asm__ volatile("lfence");
 		return (high << 32) | low;
 	}
 	METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
