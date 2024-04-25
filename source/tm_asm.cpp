@@ -106,7 +106,8 @@ namespace vi_mt
     inline count_t vi_asm_mfence_lfence_rdtsc()
     {
         uint64_t low, high;
-        __asm__ volatile("mfence; lfence;" ::: "memory");
+        __asm__ volatile("mfence" ::: "memory");
+        __asm__ volatile("lfence" ::: "memory");
         __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
         return (high << 32) | low;
     }
