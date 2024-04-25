@@ -109,12 +109,12 @@ namespace vi_mt
     inline count_t vi_asm_cpuid_rdtsc()
     {
         uint64_t low, high;
-        __asm__ volatile("push rbx\n");
-        __asm__ volatile("xor eax, eax\n");
-        __asm__ volatile("xor ecx, ecx\n");
-        __asm__ volatile("cpuid\n");
+        __asm__ volatile("push rbx");
+        __asm__ volatile("xor eax, eax");
+        __asm__ volatile("xor ecx, ecx");
+        __asm__ volatile("cpuid");
         __asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
-        __asm__ volatile("pop rbx\n");
+        __asm__ volatile("pop rbx");
         return (high << 32) | low;
     }
     METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
@@ -123,12 +123,12 @@ namespace vi_mt
     {
         uint32_t aux;
         uint64_t low, high;
-        __asm__ volatile("push rbx\n");
+        __asm__ volatile("push rbx");
         __asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
-        __asm__ volatile("xor eax, eax\n");
-        __asm__ volatile("xor ecx, ecx\n");
-        __asm__ volatile("cpuid\n");
-        __asm__ volatile("pop rbx\n");
+        __asm__ volatile("xor eax, eax");
+        __asm__ volatile("xor ecx, ecx");
+        __asm__ volatile("cpuid");
+        __asm__ volatile("pop rbx");
         return (high << 32) | low;
     }
     METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
@@ -136,8 +136,8 @@ namespace vi_mt
     inline count_t vi_asm_mfence_lfence_rdtsc()
     {
         uint64_t low, high;
-        __asm__ volatile("mfence\n");
-        __asm__ volatile("lfence\n");
+        __asm__ volatile("mfence");
+        __asm__ volatile("lfence");
         __asm__ volatile("rdtsc\n" : "=a" (low), "=d" (high));
         return (high << 32) | low;
     }
@@ -147,7 +147,7 @@ namespace vi_mt
 	{   uint32_t aux;
         uint64_t low, high;
 		__asm__ volatile("rdtscp\n" : "=a" (low), "=d" (high), "=c" (aux));
-        __asm__ volatile("lfence\n");
+        __asm__ volatile("lfence");
 		return (high << 32) | low;
 	}
 	METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
