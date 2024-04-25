@@ -72,7 +72,7 @@ namespace vi_mt
 
     inline count_t vi_lfence_rdtsc()
     {
-        __mm_lfence();
+        _mm_lfence();
         return __rdtsc();
     }
     METRIC("LFENCE+RDTSC_INTRINSIC", vi_lfence_rdtsc);
