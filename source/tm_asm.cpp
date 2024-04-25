@@ -70,6 +70,30 @@ namespace vi_mt
     }
     METRIC("RDTSCP_INTRINSIC", tm_rdtsc);
 
+    inline count_t vi_lfence_rdtsc()
+    {
+        __mm_lfence();
+        return __rdtsc();
+    }
+    METRIC("LFENCE+RDTSC_INTRINSIC", vi_lfence_rdtsc);
+
+    inline count_t vi_mfence_lfence_rdtsc()
+    {
+        _mm_mfence();
+        _mm_lfence();
+        return __rdtsc();
+    }
+    METRIC("MFENCE+LFENCE+RDTSC_INTRINSIC", vi_mfence_lfence_rdtsc);
+
+    inline count_t vi_rdtscp_lfence()
+    {
+        uint32_t aux;
+        uint64_t result = __rdtscp(&aux);
+        _mm_lfence();
+        return result;
+    }
+    METRIC("RDTSCP+LFENCE_INTRINSIC", vi_rdtscp_lfence);
+
 	inline count_t vi_asm_rdtsc()
 	{   uint64_t low, high;
 		__asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
