@@ -109,9 +109,10 @@ namespace vi_mt
     inline count_t vi_asm_cpuid_rdtsc()
     {
         uint64_t low, high;
-        __asm__ volatile("xor eax, eax");
-        __asm__ volatile("xor ecx, ecx");
-        __asm__ volatile("cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
+        __asm__ volatile(
+            "xor eax, eax\n\t"
+            "xor ecx, ecx\n\t"
+            "cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
         __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
         return (high << 32) | low;
     }
