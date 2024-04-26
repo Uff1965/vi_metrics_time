@@ -50,7 +50,7 @@ namespace
 	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, _quantity };
 	enum class stat_t: unsigned char { avg, min, _quantity };
 
-	auto g_stat = stat_t::avg;
+	auto g_stat = stat_t::min;
 	auto g_sort = sort_t::name;
 	auto g_repeat = 1U;
 	strs_t g_include;
@@ -122,7 +122,7 @@ namespace
 			{	g_sort = (n < argc && argv[n][0] != '-')? from_string<sort_t>(argv[n++], "sort"sv) : sort_t::discreteness;
 			}
 			else if ("--stat"sv == ptr)
-			{	g_stat = (n < argc && argv[n][0] != '-')? from_string<stat_t>(argv[n++], "stat"sv) : stat_t::min;
+			{	g_stat = (n < argc && argv[n][0] != '-')? from_string<stat_t>(argv[n++], "stat"sv) : stat_t::avg;
 			}
 			else if ("-w"sv == ptr || "--warming"sv == ptr)
 			{	misc::g_warming = ch::milliseconds{ (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "warming"sv) : 0 };
@@ -157,7 +157,7 @@ namespace
 					"-[-h]elp: this help;\n"
 					"-[-w]arming 1|0: by default - 1s; implicit - OFF;\n"
 					"-[-s]sort name|discreteness|duration|tick|type: by default - name; implicit - discreteness\n"
-					"--stat average|minimum: by default - average; implicit - minimum\n"
+					"--stat average|minimum: by default - minimum; implicit - average\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
 					"-[-r]epeat <N>: number of measurements. by default - 1; implicit - 5\n";
