@@ -312,16 +312,23 @@ namespace
 
 	std::ostream& print_itm(std::ostream& out, const str_out& str)
 	{
-		return out << std::left << std::setfill('.')
-			<< std::setw(48) << str.name_ << ": "
-			<< std::right << std::setfill(' ')
-			<< std::setw(13) << str.disc_
-			<< std::setw(7) << str.disc_prec_
-			<< std::setw(10) << str.durn_
-			<< std::setw(7) << str.durn_prec_
-			<< std::setw(10) << str.val_
-			<< std::setw(7) << str.val_prec_
-			<< std::setw(8) << str.val_sleep_;
+		static auto marker = [](const std::string& s) {return !s.empty() && std::all_of(s.begin(), s.end(), [](auto c) {return c == ' '; }); };
+		auto text = [](const std::string& s) {return marker(s) ? "vvvvvv" : s.c_str(); };
+		out << std::left << std::setw(49);
+		if (std::any_of(str.name_.begin(), str.name_.end(), [](auto c) {return c != ' '; }))
+		{	out << std::setfill('.') << (str.name_ + ":") << std::setfill(' ');
+		}
+		else
+		{	out << text(str.name_);
+		}
+		return out << std::right
+			<< std::setw(14) << text(str.disc_)
+			<< std::setw(7) << text(str.disc_prec_)
+			<< std::setw(10) << text(str.durn_)
+			<< std::setw(7) << text(str.durn_prec_)
+			<< std::setw(10) << text(str.val_)
+			<< std::setw(7) << text(str.val_prec_)
+			<< std::setw(8) << text(str.val_sleep_);
 	}
 
 	struct data_t
@@ -372,7 +379,7 @@ namespace
 		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-" }) << "\n";
 		{
 			str_out sort_line = { "", "", "", "", "" };
-			static constexpr char marker[] = "Sorted";
+			static constexpr char marker[] = " ";
 			switch (g_sort)
 			{
 				case sort_t::discreteness:
@@ -583,7 +590,17 @@ namespace
 
 	void work()
 	{	auto data = prepare(collect());
-		std::cout << "\nMeasured properties of time functions:\n" << data << std::endl;
+		const char *descr = "minimum value";
+		switch (g_stat)
+		{
+			case stat_t::avg:
+				descr = "average, excluding extreme values";
+				break;
+			case stat_t::min:
+			default:
+				break;
+		}
+		std::cout << "\nMeasured properties of time functions (" << descr << "):\n" << data << std::endl;
 	}
 } // namespace
 

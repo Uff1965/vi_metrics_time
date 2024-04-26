@@ -40,14 +40,38 @@ namespace vi_mt
         unsigned int aux;
         return __rdtscp(&aux);
     }
-    METRIC("RDTSCP_INTRINSIC", tm_rdtsc);
+    METRIC("RDTSCP_INTRINSIC", tm_rdtscp);
 
-    inline count_t tm_rdtsc_cpuid() {
+    inline count_t vi_lfence_rdtsc()
+    {
+        _mm_lfence();
+        return __rdtsc();
+    }
+    METRIC("LFENCE+RDTSC_INTRINSIC", vi_lfence_rdtsc);
+
+    inline count_t vi_mfence_lfence_rdtsc()
+    {
+        _mm_mfence();
+        _mm_lfence();
+        return __rdtsc();
+    }
+    METRIC("MFENCE+LFENCE+RDTSC_INTRINSIC", vi_mfence_lfence_rdtsc);
+
+    inline count_t vi_rdtscp_lfence()
+    {
+        uint32_t aux;
+        uint64_t result = __rdtscp(&aux);
+        _mm_lfence();
+        return result;
+    }
+    METRIC("RDTSCP+LFENCE_INTRINSIC", vi_rdtscp_lfence);
+
+    inline count_t tm_cpuid_rdtsc() {
         int cpuInfo[4];
         __cpuid(cpuInfo, 0);
         return __rdtsc();
     }
-    METRIC("CPUID+RDTSC_INTRINSIC", tm_rdtsc_cpuid);
+    METRIC("CPUID+RDTSC_INTRINSIC", tm_cpuid_rdtsc);
 
     inline count_t tm_rdtscp_cpuid() {
         unsigned int aux;
@@ -68,7 +92,7 @@ namespace vi_mt
         unsigned int aux;
         return __rdtscp(&aux);
     }
-    METRIC("RDTSCP_INTRINSIC", tm_rdtsc);
+    METRIC("RDTSCP_INTRINSIC", tm_rdtscp);
 
     inline count_t vi_lfence_rdtsc()
     {
@@ -165,7 +189,7 @@ namespace vi_mt
         asm volatile("mrs %0, cntvct_el0" : "=r"(result));
         return result;
     }
-    METRIC("mrs", tm_mrs);
+    METRIC("MRS", tm_mrs);
 
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
@@ -180,5 +204,4 @@ namespace vi_mt
     METRIC("LFENCE+RDTSC_ASM", vi_asm_lfence_rdtsc);
     METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
 #endif
-
 } // namespace vi_mt

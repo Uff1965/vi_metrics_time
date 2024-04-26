@@ -26,7 +26,7 @@ namespace misc
 	};
 
 	bool operator<(duration_t l, duration_t r);
-	std::string to_string(duration_t sec, unsigned char precision = 2, unsigned char dec = 1);
+	std::string to_string(duration_t sec, unsigned char precision = 3, unsigned char dec = 1);
 	inline std::ostream& operator<<(std::ostream& os, const duration_t& d) { return os << misc::to_string(d); }
 
 	class progress_t

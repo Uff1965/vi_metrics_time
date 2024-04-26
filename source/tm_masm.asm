@@ -111,7 +111,7 @@ vi_asm_rdtscp_cpuid ENDP
 ;Thus, it is not ordered with respect to executions of the LFENCE instruction; data can be brought into the caches
 ;speculatively just before, during, or after the execution of an LFENCE instruction."
 
-public vi_asm_mfence_lfence_rdtsc, vi_asm_lfence_rdtsc, vi_asm_rdtscp_lfence
+public vi_asm_lfence_rdtsc, vi_asm_mfence_lfence_rdtsc, vi_asm_rdtscp_lfence
 
 vi_asm_lfence_rdtsc PROC
 	lfence
