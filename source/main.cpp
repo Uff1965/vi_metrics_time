@@ -589,18 +589,19 @@ namespace
 	}
 
 	void work()
-	{	auto data = prepare(collect());
-		const char *descr = "minimum value";
-		switch (g_stat)
-		{
-			case stat_t::avg:
-				descr = "average, excluding extreme values";
-				break;
-			case stat_t::min:
-			default:
-				break;
+	{	const auto col = collect();
+		const auto data = prepare(col);
+
+		std::cout << "\nMeasured properties of time functions";
+		if (const auto size = col.empty()? 0: col.begin()->second.call_duration_.size(); size > 1)
+		{	if (g_stat == stat_t::avg)
+			{	std::cout << " (average of " << size << " measurements, excluding extreme values)";
+			}
+			else
+			{	std::cout << " (minimum value from " << size << " measurements)";
+			}
 		}
-		std::cout << "\nMeasured properties of time functions (" << descr << "):\n" << data << std::endl;
+		std::cout << ":\n" << data << std::endl;
 	}
 } // namespace
 
@@ -635,7 +636,6 @@ int main(int argc, char* argv[])
 	std::cout << "Build: " __DATE__ " " __TIME__ " " << BUILD_TYPE << "\n";
 	std::cout << "Start: "sv << std::put_time(std::localtime(&start), "%Y.%m.%d %H:%M:%S") << '\n';
 	std::cout.imbue(locale_with_grouping{ std::cout.getloc() });
-	endl(std::cout);
 
 	parsing_of_parameters(argc, argv);
 
