@@ -152,9 +152,8 @@ namespace vi_mt
 
 			// Are waiting for the start of a new time interval.
 			auto next = now(); // Preload
-			for (const auto prev = now(); prev >= next; )
-			{	next = now();
-			}
+			for (const auto prev = now(); prev >= next; next = now())
+			{/**/}
 			return next;
 		};
 
