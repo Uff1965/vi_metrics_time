@@ -1,0 +1,63 @@
+Build: Apr 27 2024 07:40:14 Release
+Start: 2024.04.27 12:01:04
+Command line: "./vi_metrics_time" "-r" "20"
+
+Model name:                         Intel(R) Core(TM) i7-4770T CPU @ 2.50GHz
+CPU max MHz:                        3700.0000
+CPU min MHz:                        800.0000
+
+
+Collecting function properties... Done (2.4ks)
+
+Measured properties of time functions (minimum value from 20 measurements):
+Name:............................................ Discreteness:    +/- Duration:    +/- One tick:    +/-   Type:
+vvvvvv                                                                                                          
+<LNX>::times(tms):...............................         9.9ms   0.0%   503.0ns   0.9%     9.9ms   0.8% Process
+<LNX>::times(nullptr):...........................        10.0ms   0.0%   352.0ns   1.9%    10.0ms   0.0%    Wall
+<LNX>::gettimeofday():...........................         1.0us   0.0%    15.2ns   1.4%     1.0us   0.0%    Wall
+<LNX>::getrusage(RUSAGE_THREAD):.................         4.0ms   0.0%   429.0ns   0.2%     1.0us   0.0%  Thread
+<LNX>::getrusage(RUSAGE_SELF):...................         1.0us  60.0%   553.0ns   0.7%     1.0us   0.0% Process
+<LNX>::clock_gettime(CLOCK_THREAD_CPUTIME_ID):...       483.0ns   0.8%   479.0ns   0.5%     1.0ns   0.0%  Thread
+<LNX>::clock_gettime(CLOCK_TAI):.................        20.6ns   6.5%    14.9ns   0.7%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_REALTIME_COARSE):.....         4.0ms   0.0%     5.4ns  11.0%   992.0ps   0.2%    Wall
+<LNX>::clock_gettime(CLOCK_REALTIME):............        20.2ns   9.5%    14.4ns   1.1%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_PROCESS_CPUTIME_ID):..       492.0ns   0.5%   494.0ns   0.4%     1.0ns   0.0% Process
+<LNX>::clock_gettime(CLOCK_MONOTONIC_RAW):.......        20.4ns   8.4%    15.2ns   3.4%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_MONOTONIC_COARSE):....         4.0ms   0.0%     5.4ns   5.0%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_MONOTONIC):...........        19.6ns   6.2%    14.4ns   2.8%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_BOOTTIME):............        20.2ns   6.4%    14.4ns   2.7%     1.0ns   0.0%    Wall
+<C>  ::timespec_get(TIME_UTC):...................        21.0ns   5.9%    15.5ns   1.2%     1.0ns   0.0%    Wall
+<C>  ::time():...................................         1.0s    0.0%     2.1ns  23.0%     1.0s    0.0%    Wall
+<C>  ::clock():..................................         1.0us   0.0%   494.0ns   0.5%     1.0us   0.0% Process
+<C++>::system_clock::now():......................        20.2ns   6.5%    15.5ns   1.0%     1.0ns   0.0%    Wall
+<C++>::steady_clock::now():......................        19.8ns   9.0%    15.8ns   1.7%     1.0ns   0.0%    Wall
+<C++>::high_resolution_clock::now():.............        22.6ns   5.3%    15.5ns   0.9%     1.0ns   0.0%    Wall
+<ASM>::RDTSC_INTRINSIC:..........................         7.5ns   2.0%     6.0ns   4.3%   400.0ps   0.0%    Wall
+<ASM>::RDTSC_ASM:................................         4.8ns  16.0%     6.5ns   1.5%   400.0ps   0.0%    Wall
+<ASM>::RDTSCP_INTRINSIC:.........................        10.1ns  12.0%     8.4ns   3.6%   400.0ps   0.0%    Wall
+<ASM>::RDTSCP_ASM:...............................         8.3ns   7.2%     7.9ns   3.1%   400.0ps   0.0%    Wall
+<ASM>::RDTSCP+LFENCE_INTRINSIC:..................        18.4ns   5.1%    13.8ns   0.7%   400.0ps   0.0%    Wall
+<ASM>::RDTSCP+LFENCE_ASM:........................        16.5ns   2.7%    14.0ns   0.9%   400.0ps   0.0%    Wall
+<ASM>::RDTSCP+CPUID_ASM:.........................        44.7ns  27.0%    34.8ns   1.2%   400.0ps   0.0%    Wall
+<ASM>::MFENCE+LFENCE+RDTSC_INTRINSIC:............        17.1ns   3.7%    17.2ns   1.1%   400.0ps   0.0%    Wall
+<ASM>::MFENCE+LFENCE+RDTSC_ASM:..................        17.3ns   4.9%    17.4ns   2.8%   400.0ps   0.0%    Wall
+<ASM>::LFENCE+RDTSC_INTRINSIC:...................         9.1ns   9.1%     8.9ns   0.6%   400.0ps   0.0%    Wall
+<ASM>::LFENCE+RDTSC_ASM:.........................         8.8ns   8.3%     8.4ns   2.4%   400.0ps   0.0%    Wall
+<ASM>::CPUID+RDTSC_ASM:..........................        30.7ns   6.5%    29.6ns   0.8%   400.0ps   0.0%    Wall
+
+
+Notes:
+	The std::chrono::system_clock::is_steady:          false;
+	The std::chrono::steady_clock::is_steady:          true;
+	The std::chrono::high_resolution_clock::is_steady: false;
+	The std::chrono::system_clock::duration:            1.0ns;
+	The std::chrono::steady_clock::duration:            1.0ns;
+	The std::chrono::high_resolution_clock::duration:   1.0ns;
+	The number of clock vi_tmGetTicks per second 'CLOCKS_PER_SEC': 1'000'000 (what is equivalent to 1.0us)
+	The number of clock vi_tmGetTicks per second 'sysconf(_SC_CLK_TCK)': 100 (10ms);
+	Resolution (precision) 'clock_getres(CLOCK_REALTIME)': 1.0ns;
+	Resolution (precision) 'clock_getres(CLOCK_MONOTONIC)': 1.0ns;
+	Resolution (precision) 'clock_getres(CLOCK_PROCESS_CPUTIME_ID)': 1.0ns;
+	Resolution (precision) 'clock_getres(CLOCK_THREAD_CPUTIME_ID)': 1.0ns;
+
+Time expend: 00:40:49

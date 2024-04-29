@@ -1,0 +1,63 @@
+Build: Apr 27 2024 07:40:14 Release
+Start: 2024.04.27 08:28:40
+Command line: "./vi_metrics_time" "-r" "20"
+
+Model name:                         AMD Ryzen 5 2400G with Radeon Vega Graphics
+CPU max MHz:                        3600.0000
+CPU min MHz:                        1600.0000
+
+
+Collecting function properties... Done (2.4ks)
+
+Measured properties of time functions (minimum value from 20 measurements):
+Name:............................................ Discreteness:    +/- Duration:    +/- One tick:    +/-   Type:
+vvvvvv                                                                                                          
+<LNX>::times(tms):...............................         9.9ms   0.0%   583.0ns   5.5%     9.9ms   0.7% Process
+<LNX>::times(nullptr):...........................        10.0ms   0.0%   157.0ns   6.5%    10.0ms   0.0%    Wall
+<LNX>::gettimeofday():...........................         1.0us   0.0%    24.1ns  11.0%     1.0us   0.0%    Wall
+<LNX>::getrusage(RUSAGE_THREAD):.................         4.0ms   0.0%   366.0ns   7.0%     1.0us   0.0%  Thread
+<LNX>::getrusage(RUSAGE_SELF):...................         1.0us   0.0%   711.0ns   7.1%     1.0us   0.0% Process
+<LNX>::clock_gettime(CLOCK_THREAD_CPUTIME_ID):...       548.0ns   4.0%   546.0ns   4.0%     1.0ns   0.0%  Thread
+<LNX>::clock_gettime(CLOCK_TAI):.................        24.0ns  10.0%    23.7ns   9.7%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_REALTIME_COARSE):.....         4.0ms   0.0%     4.3ns   6.8%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_REALTIME):............        24.0ns  15.0%    23.7ns   9.4%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_PROCESS_CPUTIME_ID):..       586.0ns  16.0%   585.0ns   7.7%     1.0ns   0.0% Process
+<LNX>::clock_gettime(CLOCK_MONOTONIC_RAW):.......        26.0ns  15.0%    23.9ns   8.5%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_MONOTONIC_COARSE):....         4.0ms   0.0%     4.3ns  14.0%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_MONOTONIC):...........        24.0ns  24.0%    23.8ns   9.7%     1.0ns   0.0%    Wall
+<LNX>::clock_gettime(CLOCK_BOOTTIME):............        24.0ns  20.0%    23.9ns   8.8%     1.0ns   0.0%    Wall
+<C>  ::timespec_get(TIME_UTC):...................        24.0ns  11.0%    23.8ns   7.2%     1.0ns   0.0%    Wall
+<C>  ::time():...................................         1.0s    0.0%     1.9ns   2.3%     1.0s    0.0%    Wall
+<C>  ::clock():..................................         1.0us   0.0%   591.0ns   7.0%     1.0us   0.0% Process
+<C++>::system_clock::now():......................        24.0ns   8.8%    24.1ns   6.8%     1.0ns   0.0%    Wall
+<C++>::steady_clock::now():......................        24.0ns  16.0%    24.2ns  10.0%     1.0ns   0.0%    Wall
+<C++>::high_resolution_clock::now():.............        24.0ns   7.9%    24.3ns   6.8%     1.0ns   0.0%    Wall
+<ASM>::RDTSC_INTRINSIC:..........................        10.0ns  18.0%     9.6ns   8.4%   278.0ps   0.0%    Wall
+<ASM>::RDTSC_ASM:................................         8.0ns  18.0%     9.5ns   6.7%   278.0ps   0.0%    Wall
+<ASM>::RDTSCP_INTRINSIC:.........................        18.0ns  15.0%    18.2ns   6.2%   278.0ps   0.0%    Wall
+<ASM>::RDTSCP_ASM:...............................        18.0ns  14.0%    18.0ns   6.8%   278.0ps   0.0%    Wall
+<ASM>::RDTSCP+LFENCE_INTRINSIC:..................        24.0ns  11.0%    23.8ns   5.6%   278.0ps   0.0%    Wall
+<ASM>::RDTSCP+LFENCE_ASM:........................        24.0ns  18.0%    22.9ns   7.0%   278.0ps   0.0%    Wall
+<ASM>::RDTSCP+CPUID_ASM:.........................        64.0ns  17.0%    41.8ns   8.1%   278.0ps   0.0%    Wall
+<ASM>::MFENCE+LFENCE+RDTSC_INTRINSIC:............        46.0ns  23.0%    33.2ns   7.9%   278.0ps   0.0%    Wall
+<ASM>::MFENCE+LFENCE+RDTSC_ASM:..................        60.0ns   9.1%    33.2ns   4.5%   278.0ps   0.0%    Wall
+<ASM>::LFENCE+RDTSC_INTRINSIC:...................        18.0ns  15.0%    18.7ns   7.0%   278.0ps   0.0%    Wall
+<ASM>::LFENCE+RDTSC_ASM:.........................        18.0ns  21.0%    18.6ns   7.5%   278.0ps   0.0%    Wall
+<ASM>::CPUID+RDTSC_ASM:..........................        38.0ns  41.0%    36.6ns   6.2%   278.0ps   0.0%    Wall
+
+
+Notes:
+	The std::chrono::system_clock::is_steady:          false;
+	The std::chrono::steady_clock::is_steady:          true;
+	The std::chrono::high_resolution_clock::is_steady: false;
+	The std::chrono::system_clock::duration:            1.0ns;
+	The std::chrono::steady_clock::duration:            1.0ns;
+	The std::chrono::high_resolution_clock::duration:   1.0ns;
+	The number of clock vi_tmGetTicks per second 'CLOCKS_PER_SEC': 1'000'000 (what is equivalent to 1.0us)
+	The number of clock vi_tmGetTicks per second 'sysconf(_SC_CLK_TCK)': 100 (10ms);
+	Resolution (precision) 'clock_getres(CLOCK_REALTIME)': 1.0ns;
+	Resolution (precision) 'clock_getres(CLOCK_MONOTONIC)': 1.0ns;
+	Resolution (precision) 'clock_getres(CLOCK_PROCESS_CPUTIME_ID)': 1.0ns;
+	Resolution (precision) 'clock_getres(CLOCK_THREAD_CPUTIME_ID)': 1.0ns;
+
+Time expend: 00:40:45

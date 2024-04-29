@@ -13,7 +13,7 @@ IF NOT %3.==. SET filter=-i %3
 FOR /l %%n IN (1, 1, %cnt%) DO (
 	TIME /t
 	ECHO Started measurement %%n of %cnt%...
-	START /D . /ABOVENORMAL /WAIT /B vi_metrics_time.exe %filter% -r %rep% >vi_metrics_time.%COMPUTERNAME%.%%n.txt
+	START /ABOVENORMAL /WAIT /B vi_metrics_time.exe %filter% -r %rep% >vi_metrics_time.%COMPUTERNAME%.%%n.txt
 	ECHO done.
 )
 

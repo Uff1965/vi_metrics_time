@@ -48,9 +48,9 @@ namespace
 {
 	using strs_t = std::vector<std::string>;
 	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, _quantity };
-	enum class stat_t: unsigned char { avg, min, _quantity };
+	enum class stat_t: unsigned char { avg, min, median, _quantity };
 
-	auto g_stat = stat_t::min;
+	auto g_stat = stat_t::median;
 	auto g_sort = sort_t::name;
 	auto g_repeat = 1U;
 	strs_t g_include;
@@ -89,6 +89,8 @@ namespace
 			result = stat_t::avg;
 		else if ("minimum"sv == ptr)
 			result = stat_t::min;
+		else if ("median"sv == ptr)
+			result = stat_t::median;
 		else
 		{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
 			std::exit(1);
@@ -122,7 +124,7 @@ namespace
 			{	g_sort = (n < argc && argv[n][0] != '-')? from_string<sort_t>(argv[n++], "sort"sv) : sort_t::discreteness;
 			}
 			else if ("--stat"sv == ptr)
-			{	g_stat = (n < argc && argv[n][0] != '-')? from_string<stat_t>(argv[n++], "stat"sv) : stat_t::avg;
+			{	g_stat = (n < argc && argv[n][0] != '-')? from_string<stat_t>(argv[n++], "stat"sv) : stat_t::min;
 			}
 			else if ("-w"sv == ptr || "--warming"sv == ptr)
 			{	misc::g_warming = ch::milliseconds{ (n < argc && argv[n][0] != '-') ? from_string<unsigned>(argv[n++], "warming"sv) : 0 };
@@ -157,7 +159,7 @@ namespace
 					"-[-h]elp: this help;\n"
 					"-[-w]arming 1|0: by default - 1s; implicit - OFF;\n"
 					"-[-s]sort name|discreteness|duration|tick|type: by default - name; implicit - discreteness\n"
-					"--stat average|minimum: by default - minimum; implicit - average\n"
+					"--stat average|minimum|median: by default - median; implicit - minimum\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
 					"-[-r]epeat <N>: number of measurements. by default - 1; implicit - 5\n";
@@ -345,13 +347,11 @@ namespace
 	};
 
 	misc::duration_t tick(const data_t& itm)
-	{
-		return misc::duration_t{ itm.unit_ };
+	{	return misc::duration_t{ itm.unit_ };
 	}
 
 	misc::duration_t discreteness(const data_t& itm)
-	{
-		return misc::duration_t{ itm.unit_ * itm.discreteness_ };
+	{	return misc::duration_t{ itm.unit_ * itm.discreteness_ };
 	}
 
 	template<sort_t E> auto make_tuple(const data_t& v);
@@ -469,6 +469,61 @@ namespace
 		return result;
 	}
 
+	template<typename I>
+	constexpr double average(I begin, I end)
+	{	return std::accumulate(begin, end, 0.0) / static_cast<double>(std::distance(begin, end));
+	}
+
+	template<typename I>
+	double median(I begin, I end)
+	{	std::vector<double> result(std::distance(begin, end));
+		(void)std::partial_sort_copy(begin, end, result.begin(), result.end());
+		const auto half = result.size() / 2;
+		return (result.size() % 2) ? result[half] : 0.5 * ((result[half - 1] + result[half]));
+	}
+
+	template<typename I>
+	double percentage_standard_deviation(I begin, I end)
+	{
+		auto result = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
+		result *= static_cast<double>(std::distance(begin, end)) / std::pow(std::accumulate(begin, end, 0.0), 2.0);
+		result += std::numeric_limits<decltype(result)>::epsilon();
+		assert(result >= 1.0);
+		result = 100.0 * ((result > 1.0) ? std::sqrt(result - 1.0) : 0.0);
+		return result;
+	}
+
+#ifndef NDEBUG
+	const auto test_stat = []
+		{	static constexpr double samples1[] = {5, 2, 4, 4, 4, 5, 5};
+			constexpr auto median1 = 4.0;
+			constexpr auto mean1 = 4.1428571428571;
+			constexpr auto sd1 = 0.98974331861079 / mean1;
+
+			static constexpr double samples2[] = {5, 2, 4, 7, 4, 4, 5, 5, 9, 3};
+			constexpr auto median2 = 4.5;
+			constexpr auto mean2 = 4.8;
+			constexpr auto sd2 = 1.8867962264113 / mean2;
+
+			// Math online calculators: https://www.calculator.net/math-calculator.html
+
+			assert(std::abs(median(std::begin(samples1), std::end(samples1)) - median1) < 1e-12);
+			assert(std::abs(average(std::begin(samples1), std::end(samples1)) - mean1) < 1e-12);
+			assert(std::abs(percentage_standard_deviation(std::begin(samples1), std::end(samples1)) / sd1 - 100.0) < 1e-10);
+			assert(std::abs(median(std::begin(samples2), std::end(samples2)) - median2) < 1e-12);
+			assert(std::abs(average(std::begin(samples2), std::end(samples2)) - mean2) < 1e-12);
+			assert(std::abs(percentage_standard_deviation(std::begin(samples2), std::end(samples2)) / sd2 - 100.0) < 1e-10);
+			return 0;
+		}();
+#endif
+
+	std::pair<double, double> calc_stat_median(std::vector<double> data)
+	{	assert(!data.empty());
+		const auto medn = median(data.begin(), data.end());
+		const auto sd = percentage_standard_deviation(data.begin(), data.end());
+		return std::make_pair(medn, sd);
+	}
+
 	std::pair<double, double> calc_stat_avg(std::vector<double> data) //-V813
 	{	assert(!data.empty());
 
@@ -477,60 +532,27 @@ namespace
 		auto size = static_cast<double>(data.size()); //-V203
 
 		// Average.
-		auto aveg = std::accumulate(begin, end, 0.0) / size;
+		auto aveg = average(begin, end);
 
-		if (const auto it = std::remove_if(begin, end, [aveg](auto v) {return v - aveg > std::numeric_limits<decltype(aveg)>::epsilon(); }); it != end)
+		// We filter out large deviations.
+		if (const auto it = std::remove_if(begin, end, [lim = aveg * 1.2](auto v) {return v >= lim; }); it != end)
 		{	end = it;
 			size = static_cast<double>(std::distance(begin, end));
-			aveg = std::accumulate(begin, end, 0.0) / size;
+			aveg = average(begin, end);
 		}
 
 		// Standard Deviation in percentage.
-		auto sd = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd *= size / std::pow(std::accumulate(begin, end, 0.0), 2.0);
-		sd += std::numeric_limits<decltype(sd)>::epsilon();
-		assert(sd >= 1.0);
-		sd = (sd > 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
+		const auto sd = percentage_standard_deviation(begin, end);
 
 		return std::make_pair(aveg, sd);
 	}
-#	ifndef NDEBUG
-	const auto test_calc_stat_avg = []
-	{	static const std::vector<double> samples = {5, 2, 4, 7, 4, 4, 5, 5, 9}; // ->{5, 2, 4, 4, 4, 5, 5} see function calc_stat !!!
-		constexpr auto average = 4.142857143;
-		constexpr auto sd = 0.9897433186 / average * 100.0; // percentages
-
-		const auto [a, d] = calc_stat_avg(samples);
-		assert(std::abs(a / average - 1.0) < 1e-6);
-		assert(std::abs(d / sd - 1.0) < 1e-6);
-		return 0;
-	}();
-#	endif
 
 	std::pair<double, double> calc_stat_min(std::vector<double> data)
 	{	assert(!data.empty());
-
 		const auto min = *std::min_element(data.begin(), data.end());
-		auto sd = std::accumulate(data.begin(), data.end(), 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		sd *= static_cast<double>(data.size()) / std::pow(std::accumulate(data.begin(), data.end(), 0.0), 2); //-V203
-		sd += std::numeric_limits<decltype(sd)>::epsilon();
-		assert(sd >= 1.0);
-		sd = (sd >= 1.0) ? (std::sqrt(sd - 1.0) * 100.0) : 0.0;
-
+		const auto sd = percentage_standard_deviation(data.begin(), data.end());
 		return std::make_pair(min, sd);
 	}
-#	ifndef NDEBUG
-	const auto test_calc_stat_min = []
-	{	static const std::vector<double> samples = { 5, 2, 4, 7, 4, 4, 5, 5, 9 };
-		constexpr auto min = 2.0;
-		constexpr auto sd = 1.8856180832 / 5.0 * 100.0; // percentages
-
-		const auto [a, d] = calc_stat_min(samples);
-		assert(std::abs(a / min - 1.0) < 1e-6);
-		assert(std::abs(d / sd - 1.0) < 1e-6);
-		return 0;
-	}();
-#	endif
 
 	std::pair<double, double> calc_stat(std::vector<double> data)
 	{
@@ -538,8 +560,10 @@ namespace
 
 		if (g_stat == stat_t::avg)
 			calc_stat = calc_stat_avg;
-		else
+		else if(g_stat == stat_t::min)
 			calc_stat = calc_stat_min;
+		else
+			calc_stat = calc_stat_median;
 
 		return calc_stat(std::move(data));
 	}
@@ -550,9 +574,9 @@ namespace
 
 		std::tie(result.discreteness_, result.discreteness_prec_) = calc_stat(itm.discreteness_);
 		std::tie(result.call_duration_, result.duration_prec_) = calc_stat(itm.call_duration_);
-		std::tie(result.unit_, result.unit_prec_) = calc_stat(itm.unit_of_currrentthread_work_);
-		const auto uallw = calc_stat(itm.unit_of_allthreads_work_).first;
-		const auto usleep = calc_stat(itm.unit_of_sleeping_process_).first;
+		std::tie(result.unit_, result.unit_prec_) = calc_stat_median(itm.unit_of_currrentthread_work_);
+		const auto uallw = calc_stat_median(itm.unit_of_allthreads_work_).first;
+		const auto usleep = calc_stat_median(itm.unit_of_sleeping_process_).first;
 
 		if (result.unit_ / uallw > 1.2)
 			result.type_ = "Process"s; // The process-clock is affected by the load on all cores.
@@ -590,6 +614,25 @@ namespace
 
 	void work()
 	{	const auto col = collect();
+
+//vTempvTempvTempvTempvTempvTempvTempvTempvTempvTempvTempvTempvTemp
+for (const auto& i : col)
+{
+	std::cout << "\n\'" << i.first << "\' results:\n";
+	const auto& vr = i.second.discreteness_;
+	double min = std::numeric_limits<double>::max();
+	double max = std::numeric_limits<double>::min();
+	for (std::size_t n = 0; n < vr.size(); ++n)
+	{	const auto v = vr[n];
+		std::cout << v << (((n + 1) % 10)? ", " : ";\n");
+		if (min > v) { min = v; }
+		if (max < v) { max = v; }
+	}
+	std::cout << "mean: " << average(vr.begin(), vr.end()) << " [" << min << " - " << max << "]; ";
+	std::cout << "median: " << median(vr.begin(), vr.end()) << "; sd: " << percentage_standard_deviation(vr.begin(), vr.end()) << "%;\n";
+}
+//^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp
+
 		const auto data = prepare(col);
 
 		std::cout << "\nMeasured properties of time functions";
