@@ -351,7 +351,7 @@ namespace
 	}
 
 	misc::duration_t discreteness(const data_t& itm)
-	{	return misc::duration_t{ itm.unit_ * itm.discreteness_ };
+	{	return misc::duration_t{ itm.discreteness_ * itm.unit_ };
 	}
 
 	template<sort_t E> auto make_tuple(const data_t& v);
@@ -417,8 +417,8 @@ namespace
 			str_out s =
 			{	m.name_,
 				to_string(discreteness(m), 3),
-				to_string(misc::duration_t{ m.call_duration_ }),
-				to_string(misc::duration_t{ m.unit_ }),
+				to_string(misc::duration_t{ m.call_duration_ }, 2),
+				to_string(tick(m), 2),
 				m.type_,
 				prn_sd(m.discreteness_prec_),
 				prn_sd(m.duration_prec_),
@@ -620,19 +620,22 @@ namespace
 		const auto data = prepare(raw_data);
 
 		std::cout << "\nMeasured properties of time functions";
-		if (const auto size = raw_data.empty()? 0: raw_data.begin()->second.call_duration_.size(); size > 1)
-		{	if (g_stat == stat_t::avg)
-			{	std::cout << " (average of " << size << " measurements, excluding extreme values):\n";
-			}
-			else if (g_stat == stat_t::median)
-			{	std::cout << " (median of " << size << " measurements):\n";
-			}
-			else if (g_stat == stat_t::min)
-			{	std::cout << " (minimum of " << size << " measurements):\n";
-			}
-			else
-			{	std::cout << " (ERROR - unknown prepare method):\n";
-				assert(false);
+		if (const auto size = raw_data.empty() ? 0 : raw_data.begin()->second.call_duration_.size(); size > 1)
+		{
+			switch (g_stat)
+			{
+				case stat_t::avg:
+					std::cout << " (average of " << size << " measurements, excluding extreme values):\n";
+					break;
+				case stat_t::min:
+					std::cout << " (minimum of " << size << " measurements):\n";
+					break;
+				case stat_t::median:
+					std::cout << " (median of " << size << " measurements):\n";
+					break;
+				default:
+					std::cout << "ERROR - unknown prepare method\n";
+					assert(false);
 			}
 		}
 		std::cout << data << std::endl;
