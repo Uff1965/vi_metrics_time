@@ -615,23 +615,7 @@ namespace
 	void work()
 	{	const auto col = collect();
 
-//vTempvTempvTempvTempvTempvTempvTempvTempvTempvTempvTempvTempvTemp
-for (const auto& i : col)
-{
-	std::cout << "\n\'" << i.first << "\' results:\n";
-	const auto& vr = i.second.discreteness_;
-	double min = std::numeric_limits<double>::max();
-	double max = std::numeric_limits<double>::min();
-	for (std::size_t n = 0; n < vr.size(); ++n)
-	{	const auto v = vr[n];
-		std::cout << v << (((n + 1) % 10)? ", " : ";\n");
-		if (min > v) { min = v; }
-		if (max < v) { max = v; }
-	}
-	std::cout << "mean: " << average(vr.begin(), vr.end()) << " [" << min << " - " << max << "]; ";
-	std::cout << "median: " << median(vr.begin(), vr.end()) << "; sd: " << percentage_standard_deviation(vr.begin(), vr.end()) << "%;\n";
-}
-//^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp^Temp
+		// RAW data can be saved here.
 
 		const auto data = prepare(col);
 
