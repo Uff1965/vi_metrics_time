@@ -613,22 +613,29 @@ namespace
 	}
 
 	void work()
-	{	const auto col = collect();
+	{	const auto raw_data = collect();
 
 		// RAW data can be saved here.
 
-		const auto data = prepare(col);
+		const auto data = prepare(raw_data);
 
 		std::cout << "\nMeasured properties of time functions";
-		if (const auto size = col.empty()? 0: col.begin()->second.call_duration_.size(); size > 1)
+		if (const auto size = raw_data.empty()? 0: raw_data.begin()->second.call_duration_.size(); size > 1)
 		{	if (g_stat == stat_t::avg)
-			{	std::cout << " (average of " << size << " measurements, excluding extreme values)";
+			{	std::cout << " (average of " << size << " measurements, excluding extreme values):\n";
+			}
+			else if (g_stat == stat_t::median)
+			{	std::cout << " (median of " << size << " measurements):\n";
+			}
+			else if (g_stat == stat_t::min)
+			{	std::cout << " (minimum of " << size << " measurements):\n";
 			}
 			else
-			{	std::cout << " (minimum value from " << size << " measurements)";
+			{	std::cout << " (ERROR - unknown prepare method):\n";
+				assert(false);
 			}
 		}
-		std::cout << ":\n" << data << std::endl;
+		std::cout << data << std::endl;
 	}
 } // namespace
 
