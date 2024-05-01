@@ -46,6 +46,17 @@ namespace misc
 
 namespace
 {
+	std::string version()
+	{
+#ifdef NDEBUG
+		auto result = "Release"s;
+#else
+		auto result = "Debug"s;
+#endif
+		result += " \'vi_mtrics_time\' " __DATE__ " " __TIME__ "."sv;
+		return result;
+	}
+
 	using strs_t = std::vector<std::string>;
 	enum class sort_t : unsigned char { name, discreteness, duration, tick, type, _quantity };
 	enum class stat_t: unsigned char { avg, min, median, _quantity };
@@ -148,6 +159,10 @@ namespace
 
 				g_exclude.emplace_back(argv[n++]);
 			}
+			else if ("--version"sv == ptr)
+			{	std::cout << version() << std::endl;
+				std::exit(1);
+			}
 			else
 			{	auto error = false;
 				if ("-h"sv != ptr && "--help"sv != ptr)
@@ -155,14 +170,15 @@ namespace
 					error = true;
 				}
 
-				std::cout << "\nOptions:\n" <<
+				std::cout << "Options:\n" <<
 					"-[-h]elp: this help;\n"
 					"-[-w]arming 1|0: by default - 1s; implicit - OFF;\n"
-					"-[-s]sort name|discreteness|duration|tick|type: by default - name; implicit - discreteness\n"
-					"--stat average|minimum|median: by default - median; implicit - minimum\n"
+					"-[-s]sort name|discreteness|duration|tick|type: by default - name; implicit - discreteness;\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
-					"-[-r]epeat <N>: number of measurements. by default - 1; implicit - 5\n";
+					"-[-r]epeat <N>: number of measurements. by default - 1; implicit - 5;\n"
+					"--stat average|minimum|median: by default - median; implicit - minimum;\n"
+					"--version: type and time compyle program;\n";
 
 				std::exit(error ? EXIT_FAILURE : EXIT_SUCCESS);
 			}
@@ -477,9 +493,9 @@ namespace
 	template<typename I>
 	double median(I begin, I end)
 	{	std::vector<double> result(std::distance(begin, end));
-		(void)std::partial_sort_copy(begin, end, result.begin(), result.end());
+		std::partial_sort_copy(begin, end, result.begin(), result.end()); //-V530
 		const auto half = result.size() / 2;
-		return (result.size() % 2) ? result[half] : 0.5 * ((result[half - 1] + result[half]));
+		return result.size() % 2 ? result[half] : 0.5 * (result[half - 1] + result[half]);
 	}
 
 	template<typename I>
@@ -555,15 +571,21 @@ namespace
 	}
 
 	std::pair<double, double> calc_stat(std::vector<double> data)
-	{
-		decltype(calc_stat)* calc_stat = nullptr;
-
-		if (g_stat == stat_t::avg)
-			calc_stat = calc_stat_avg;
-		else if(g_stat == stat_t::min)
-			calc_stat = calc_stat_min;
-		else
-			calc_stat = calc_stat_median;
+	{	auto calc_stat = calc_stat_median;
+		switch (g_stat)
+		{	default:
+				assert(false);
+				[[fallthrough]];
+			case stat_t::median:
+				calc_stat = calc_stat_median;
+				break;
+			case stat_t::avg:
+				calc_stat = calc_stat_avg;
+				break;
+			case stat_t::min:
+				calc_stat = calc_stat_min;
+				break;
+		}
 
 		return calc_stat(std::move(data));
 	}
@@ -664,17 +686,14 @@ vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_
 
 int main(int argc, char* argv[])
 {
-#ifdef NDEBUG
-	static constexpr auto BUILD_TYPE = "Release"sv;
-#else
-	static constexpr auto BUILD_TYPE = "Debug"sv;
-#endif
-	const auto start = std::time(nullptr);
-	std::cout << "Build: " __DATE__ " " __TIME__ " " << BUILD_TYPE << "\n";
-	std::cout << "Start: "sv << std::put_time(std::localtime(&start), "%Y.%m.%d %H:%M:%S") << '\n';
-	std::cout.imbue(locale_with_grouping{ std::cout.getloc() });
-
 	parsing_of_parameters(argc, argv);
+	std::cout.imbue(locale_with_grouping{ std::cout.getloc() });
+	std::cout << version() << "\n";
+
+	const auto start = std::time(nullptr);
+#pragma warning(suppress: 4996)
+	std::cout << "Start: "sv << std::put_time(std::localtime(&start), "%Y.%m.%d %H:%M:%S");
+	endl(std::cout);
 
 	prefix();
 	endl(std::cout);
@@ -686,6 +705,7 @@ int main(int argc, char* argv[])
 	endl(std::cout);
 
 	const auto expend = std::time(nullptr) - start;
+#pragma warning(suppress: 4996)
 	std::cout << "Time expend: "sv << std::put_time(std::gmtime(&expend), "%H:%M:%S");
 	endl(std::cout);
 }

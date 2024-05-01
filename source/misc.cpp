@@ -70,14 +70,21 @@ const auto unit_test_round = []
 {
 	struct
 	{	//-V802 On 64-bit platform, structure size can be reduced from 32 to 24 bytes by rearranging the fields according to their sizes in decreasing order.
-		int line_;
-		double org_;
-		double rnd_;
+		int line_{ -1 };
+		double org_{ std::nan("") };
+		double rnd_{ std::nan("") };
 		unsigned char precision_ = 2;
 		unsigned char dec_ = 1;
 	}
 	constexpr static samples[] =
 	{
+		{__LINE__, 449, 400, 1, 0},
+		{__LINE__, 449, 450, 2, 0},
+		{__LINE__, 449, 449, 3, 0},
+		{__LINE__, 4.49, 4.00, 1, 0},
+		{__LINE__, 4.49, 4.50, 2, 1},
+		{__LINE__, 4.49, 4.50, 3, 1},
+
 		{__LINE__, 0.0, 0.0, 1, 0},
 		{__LINE__, 0.0, 0.0, 2, 1},
 		{__LINE__, 0.0, 0.0, 4, 1},
@@ -148,7 +155,7 @@ const auto unit_test_to_string = []
 {
 	struct
 	{	//-V802
-		int line_;
+		int line_{ -1 };
 		misc::duration_t sec_;
 		std::string_view res_;
 		unsigned char precision_{ 2 };
