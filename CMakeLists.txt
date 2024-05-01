@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 function(vi_macro_show M)
 	if(DEFINED ${M})
-		message("${M}: \'${${M}}\'")
+		message(STATUS "${M}: \'${${M}}\'")
 	else()
-		message("${M}: <not defined>")
+		message(STATUS "${M}: <not defined>")
 	endif()
 endfunction()
-
-#vi_macro_show(MSVC_VERSION)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
@@ -16,8 +14,13 @@ project(vi_metrics_time LANGUAGES C CXX ASM_MASM)
 
 set(VI_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(VI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/source)
-#vi_macro_show(VI_OUT_DIR)
-#vi_macro_show(VI_SOURCE_DIR)
+
+set(Boost_USE_STATIC_LIBS        ON)  # only find static libs
+set(Boost_USE_DEBUG_LIBS        OFF)  # ignore debug libs and
+#set(Boost_USE_RELEASE_LIBS       ON)  # only find release libs
+set(Boost_USE_MULTITHREADED      ON)
+#set(Boost_USE_STATIC_RUNTIME    OFF)
+find_package(Boost 1.75 COMPONENTS "timer")
 
 ### Files #####################################################################
 set(FILE_GROUP
@@ -31,6 +34,10 @@ set(FILE_GROUP
   "${VI_SOURCE_DIR}/tm_standard.cpp"
 )
 
+if(Boost_FOUND)
+    list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_boost.cpp")
+endif()
+
 if(DEFINED WIN32)
     list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_masm.asm")
 endif()
@@ -40,7 +47,12 @@ list(APPEND SOURCE_FILES ${FILE_GROUP})
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-#set_property(SOURCE "${VI_SOURCE_DIR}/tm_masm.asm" PROPERTY LANGUAGE ASM)
+if(Boost_FOUND)
+vi_macro_show(Boost_INCLUDE_DIRS)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+vi_macro_show(Boost_LIBRARY_DIRS)
+    target_link_directories(${PROJECT_NAME} PRIVATE ${Boost_LIBRARY_DIRS})
+endif()
 
 ### Compiler ##################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
