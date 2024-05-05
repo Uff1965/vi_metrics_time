@@ -118,6 +118,24 @@ namespace vi_mt
     }
     METRIC("RDTSCP+LFENCE_INTRINSIC", vi_rdtscp_lfence);
 
+    inline count_t vi_rdpmc_instructions()
+    {
+        return __rdpmc(1UL << 30);
+    }
+    METRIC("RDPMC_INSTRUCTIONS_INTRINSIC", vi_rdpmc_instructions);
+
+    inline count_t vi_rdpmc_actual_cycles()
+    {
+        return __rdpmc((1UL << 30) + 1U);
+    }
+    METRIC("RDPMC_ACTUAL_CYCLES_INTRINSIC", vi_rdpmc_actual_cycles);
+
+    inline count_t vi_rdpmc_reference_cycles()
+    {
+        return __rdpmc((1UL << 30) + 2U);
+    }
+    METRIC("RDPMC_REFERENCE_CYCLES_INTRINSIC", vi_rdpmc_reference_cycles);
+
 	inline count_t vi_asm_rdtsc()
 	{   uint64_t low, high;
 		__asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
@@ -164,8 +182,7 @@ namespace vi_mt
     METRIC("LFENCE+RDTSC_ASM", vi_asm_lfence_rdtsc);
 
     inline count_t vi_asm_mfence_lfence_rdtsc()
-    {
-        uint64_t low, high;
+    {   uint64_t low, high;
         __asm__ volatile("mfence" ::: "memory");
         __asm__ volatile("lfence" ::: "memory");
         __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
@@ -181,6 +198,30 @@ namespace vi_mt
 		return (high << 32) | low;
 	}
 	METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
+
+    inline count_t vi_asm_rdpmc_instructions()
+    {   uint64_t low, high;
+        uint32_t ecx = 1U << 30;
+        __asm __volatile("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
+        return (high << 32) | low;
+    }
+    METRIC("RDPMC_INSTRUCTIONS_ASM", vi_asm_rdpmc_instructions);
+
+    inline count_t vi_asm_rdpmc_actual_cycles()
+    {   uint64_t low, high;
+        uint32_t ecx = (1U << 30) + 1;
+        __asm __volatile("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
+        return (high << 32) | low;
+    }
+    METRIC("RDPMC_ACTUAL_CYCLES_ASM", vi_asm_rdpmc_actual_cycles);
+
+    inline count_t vi_asm_rdpmc_reference_cycles()
+    {   uint64_t low, high;
+        uint32_t ecx = (1U << 30) + 1;
+        __asm __volatile("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
+        return (high << 32) | low;
+    }
+    METRIC("RDPMC_REFERENCE_CYCLES_ASM", vi_asm_rdpmc_reference_cycles);
 
 #elif __ARM_ARCH >= 8 // ARMv8 (RaspberryPi4)
 

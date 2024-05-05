@@ -72,16 +72,25 @@ namespace vi_mt
 
 	template<const char* Name, auto Func, auto... Args>
 	double metric_t<Name, Func, Args...>::measurement_discreteness()
-	{	constexpr auto CNT = 5U;
-		std::this_thread::yield(); // Reduce the likelihood of interrupting measurements by switching threads.
-		const auto first = vi_tmGetTicks();
-		auto last = first;
-		for (auto cnt = CNT; cnt; )
-		{	if (const auto c = vi_tmGetTicks(); c != last)
-			{	last = c;
-				--cnt;
+	{	auto CNT = 5U;
+		std::invoke_result_t<decltype(vi_tmGetTicks)> first, last;
+		for(;;)
+		{	std::this_thread::yield(); // Reduce the likelihood of interrupting measurements by switching threads.
+			const auto limit = now() + ch::microseconds{ 64 };
+			last = first = vi_tmGetTicks();
+			for (auto cnt = CNT; cnt; )
+			{	if (const auto c = vi_tmGetTicks(); c != last)
+				{	last = c;
+					--cnt;
+				}
 			}
+
+			if (now() > limit)
+				break;
+
+			CNT *= 8;
 		}
+
 		return static_cast<double>(last - first) / static_cast<double>(CNT);
 	}
 

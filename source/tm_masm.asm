@@ -24,7 +24,7 @@ option casemap:none ; ƒиректива option указывает MASM сделать все символы чувств
 ;RDTSCPЧRead Time-Stamp Counter and Processor ID:
 ;"The RDTSCP instruction is not a serializing instruction, but it does wait until all previous instructions have executed and all previous loads are globally visible. But it does not wait for previous stores to be globally visible, and subse-quent instructions may begin execution before the read operation is performed. The following items may guide software seeking to order executions of RDTSCP:
 ;	*If software requires RDTSCP to be executed only after all previous stores are globally visible, it can execute MFENCE immediately before RDTSCP.
-;	*If software requires RDTSCP to be executed prior to execution of any subsequent instruction (including any memory accesses), it can execute LFENCE immediately after RDTSC"
+;	*If software requires RDTSCP to be executed prior to execution of any subsequent instruction (including any memory accesses), it can execute LFENCE immediately after RDTSCP"
 
 public vi_asm_rdtsc, vi_asm_rdtscp
 
@@ -137,6 +137,42 @@ vi_asm_rdtscp_lfence PROC
 	or	rax, rdx
 	ret	0
 vi_asm_rdtscp_lfence ENDP
+;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+; Functions using RDPMC:
+
+public vi_asm_rdpmc_instructions
+
+vi_asm_rdpmc_instructions PROC
+	mov ecx, 40000000H
+	rdpmc
+	shl	rdx, 32
+	or	rax, rdx
+	ret	0
+vi_asm_rdpmc_instructions ENDP
+
+;vi_asm_rdpmc_actual_cycles PROC
+;   unsigned long a, d, c;
+;
+;   c = (1UL<<30)+1;
+;   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+;
+;   return (a | (d << 32));
+;	ret	0
+;vi_asm_rdpmc_actual_cycles ENDP
+;
+;vi_asm_rdpmc_reference_cycles PROC
+;   unsigned long a, d, c;
+;
+;   c = (1UL<<30)+2;
+;   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+;
+;   return (a | (d << 32));
+;	ret	0
+;vi_asm_rdpmc_reference_cycles ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 END
