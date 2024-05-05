@@ -83,58 +83,54 @@ namespace vi_mt
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
 #elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
-    inline count_t tm_rdtsc() {
-        return __rdtsc();
+    inline count_t tm_rdtsc()
+    {   return __rdtsc();
     }
     METRIC("RDTSC_INTRINSIC", tm_rdtsc);
 
-    inline count_t tm_rdtscp() {
-        unsigned int aux;
+    inline count_t tm_rdtscp()
+    {   unsigned int aux;
         return __rdtscp(&aux);
     }
     METRIC("RDTSCP_INTRINSIC", tm_rdtscp);
 
     inline count_t vi_lfence_rdtsc()
-    {
-        _mm_lfence();
+    {   _mm_lfence();
         return __rdtsc();
     }
     METRIC("LFENCE+RDTSC_INTRINSIC", vi_lfence_rdtsc);
 
     inline count_t vi_mfence_lfence_rdtsc()
-    {
-        _mm_mfence();
+    {   _mm_mfence();
         _mm_lfence();
         return __rdtsc();
     }
     METRIC("MFENCE+LFENCE+RDTSC_INTRINSIC", vi_mfence_lfence_rdtsc);
 
     inline count_t vi_rdtscp_lfence()
-    {
-        uint32_t aux;
+    {   uint32_t aux;
         uint64_t result = __rdtscp(&aux);
         _mm_lfence();
         return result;
     }
     METRIC("RDTSCP+LFENCE_INTRINSIC", vi_rdtscp_lfence);
 
+/* The RDPMC instruction can only be executed at privilege level 0.
     inline count_t vi_rdpmc_instructions()
-    {
-        return __rdpmc(1UL << 30);
+    {   return __rdpmc(1UL << 30);
     }
     METRIC("RDPMC_INSTRUCTIONS_INTRINSIC", vi_rdpmc_instructions);
 
     inline count_t vi_rdpmc_actual_cycles()
-    {
-        return __rdpmc((1UL << 30) + 1U);
+    {   return __rdpmc((1UL << 30) + 1U);
     }
     METRIC("RDPMC_ACTUAL_CYCLES_INTRINSIC", vi_rdpmc_actual_cycles);
 
     inline count_t vi_rdpmc_reference_cycles()
-    {
-        return __rdpmc((1UL << 30) + 2U);
+    {   return __rdpmc((1UL << 30) + 2U);
     }
     METRIC("RDPMC_REFERENCE_CYCLES_INTRINSIC", vi_rdpmc_reference_cycles);
+*/
 
 	inline count_t vi_asm_rdtsc()
 	{   uint64_t low, high;
@@ -199,6 +195,7 @@ namespace vi_mt
 	}
 	METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
 
+/* The RDPMC instruction can only be executed at privilege level 0.
     inline count_t vi_asm_rdpmc_instructions()
     {   uint64_t low, high;
         uint32_t ecx = 1U << 30;
@@ -222,7 +219,7 @@ namespace vi_mt
         return (high << 32) | low;
     }
     METRIC("RDPMC_REFERENCE_CYCLES_ASM", vi_asm_rdpmc_reference_cycles);
-
+*/
 #elif __ARM_ARCH >= 8 // ARMv8 (RaspberryPi4)
 
     inline count_t tm_mrs() {
@@ -237,6 +234,7 @@ namespace vi_mt
 #endif
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
+// vvvvv Register the functions from the file 'tm_masm.asm'.
     METRIC("RDTSC_ASM", vi_asm_rdtsc);
     METRIC("RDTSCP_ASM", vi_asm_rdtscp);
     METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
@@ -244,5 +242,11 @@ namespace vi_mt
     METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
     METRIC("LFENCE+RDTSC_ASM", vi_asm_lfence_rdtsc);
     METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
+/* The RDPMC instruction can only be executed at privilege level 0.
+    METRIC("RDPMC_INSTRUCTIONS_ASM", vi_asm_rdpmc_instructions);
+    METRIC("RDPMC_ACTUAL_CYCLES_ASM", vi_asm_rdpmc_actual_cycles);
+    METRIC("RDPMC_REFERENCE_CYCLES_ASM", vi_asm_rdpmc_reference_cycles);
+*/
+// ^^^^^ Register the functions from the file 'tm_masm.asm'.
 #endif
 } // namespace vi_mt

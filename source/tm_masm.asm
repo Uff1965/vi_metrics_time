@@ -142,18 +142,17 @@ vi_asm_rdtscp_lfence ENDP
 
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-; Functions using RDPMC:
-
-public vi_asm_rdpmc_instructions
-
-vi_asm_rdpmc_instructions PROC
-	mov ecx, 40000000H
-	rdpmc
-	shl	rdx, 32
-	or	rax, rdx
-	ret	0
-vi_asm_rdpmc_instructions ENDP
-
+; The RDPMC instruction can only be executed at privilege level 0.
+;public vi_asm_rdpmc_instructions, vi_asm_rdpmc_actual_cycles, vi_asm_rdpmc_reference_cycles
+;
+;vi_asm_rdpmc_instructions PROC
+;	mov ecx, 40000000H
+;	rdpmc
+;	shl	rdx, 32
+;	or	rax, rdx
+;	ret	0
+;vi_asm_rdpmc_instructions ENDP
+;
 ;vi_asm_rdpmc_actual_cycles PROC
 ;   unsigned long a, d, c;
 ;
