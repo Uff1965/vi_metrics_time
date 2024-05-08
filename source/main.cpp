@@ -445,7 +445,7 @@ namespace
 		return out;
 	}
 
-	vi_mt::cont_t measurement(const strs_t& inc, const strs_t& exc, const std::function<void(double)>& progress)
+	vi_mt::raw_t measurement(const strs_t& inc, const strs_t& exc, const std::function<void(double)>& progress)
 	{	auto filter = [&inc, &exc](std::string_view s)
 			{	auto pred = [s](const auto& e) { return s.find(e) != std::string::npos; };
 				return !(std::any_of(exc.begin(), exc.end(), pred) || (!inc.empty() && std::none_of(inc.begin(), inc.end(), pred)));
@@ -664,7 +664,7 @@ namespace
 	}
 } // namespace
 
-vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
+vi_mt::raw_t vi_mt::metric_base_t::action(const std::function<bool(std::string_view)>& filter, const std::function<void(double)>& pb)
 {	
 	decltype(s_measurers_) v;
 	if (filter)
@@ -675,7 +675,7 @@ vi_mt::cont_t vi_mt::metric_base_t::action(const std::function<bool(std::string_
 	}
 	std::shuffle(v.begin(), v.end(), std::mt19937{ std::random_device{}() });
 
-	cont_t result;
+	raw_t result;
 	for (std::size_t n = 0; n < v.size(); ++n)
 	{	auto fn = [&pb, n, sz = v.size()](double part) {if (pb) pb((static_cast<double>(n) + part) / static_cast<double>(sz)); }; //-V203
 		const auto& f = v[n].get();

@@ -34,24 +34,27 @@ namespace vi_mt
 		misc::duration_t unit_of_allthreads_work_; // Duration of one tick when loading multiple threads.
 	};
 
-	using cont_t = std::map<std::string, vi_mt::item_t, std::less<>>;
+	using raw_t = std::map<std::string, vi_mt::item_t, std::less<>>;
 
 	struct metric_base_t
 	{
+		virtual ~metric_base_t() = default;
 		virtual std::string_view name() const = 0;
 		virtual item_t measurement(const std::function<void(double)>& progress) const = 0;
 		metric_base_t() { s_measurers_.emplace_back(std::ref(*this)); }; // Self-registration
 
 		static inline std::vector<std::reference_wrapper<const metric_base_t>> s_measurers_;
-		static cont_t action(const std::function<bool(std::string_view)>& filter = {}, const std::function<void(double)>& pb = {});
+		static raw_t action(const std::function<bool(std::string_view)>& filter = {}, const std::function<void(double)>& pb = {});
 	};
 
 	template<const char* Name, auto Func, auto... Args>
 	class metric_t: protected metric_base_t
 	{
 		static misc::duration_t measurement_unit_aux(void(*burden)(now_t));
+		using tick_t = std::invoke_result_t<decltype(Func), decltype(Args)...>;
+		static_assert(std::is_convertible_v<count_t, tick_t>);
 
-		[[nodiscard]] static inline auto vi_tmGetTicks()
+		[[nodiscard]] static inline tick_t vi_tmGetTicks()
 		{	return Func(Args...);
 		}
 
@@ -69,15 +72,19 @@ namespace vi_mt
 
 	template<const char* Name, auto Func, auto... Args>
 	inline const metric_t<Name, Func, Args...> metric_t<Name, Func, Args...>::s_inst_;
+	constexpr auto cache_warmup = 5U;
 
 	template<const char* Name, auto Func, auto... Args>
 	double metric_t<Name, Func, Args...>::measurement_discreteness()
-	{	auto CNT = 5U;
-		std::invoke_result_t<decltype(vi_tmGetTicks)> first, last;
+	{	auto CNT = 4U;
+		tick_t last, first;
 		for(;;)
 		{	std::this_thread::yield(); // Reduce the likelihood of interrupting measurements by switching threads.
-			const auto limit = now() + ch::microseconds{ 64 };
-			last = first = vi_tmGetTicks();
+			const auto limit = now() + ch::microseconds{ 128 };
+			for (auto n = 0U; n < cache_warmup; ++n)
+			{	last = first = vi_tmGetTicks();
+			}
+
 			for (auto cnt = CNT; cnt; )
 			{	if (const auto c = vi_tmGetTicks(); c != last)
 				{	last = c;
@@ -86,7 +93,8 @@ namespace vi_mt
 			}
 
 			if (now() > limit)
-				break;
+			{	break;
+			}
 
 			CNT *= 8;
 		}
@@ -97,10 +105,12 @@ namespace vi_mt
 	template<const char* Name, auto Func, auto... Args>
 	misc::duration_t metric_t<Name, Func, Args...>::measurement_unit_aux(void(*burden)(now_t))
 	{
-		using tick_t = std::invoke_result_t<decltype(vi_tmGetTicks)>;
 		auto get_pair = []
 		{	std::this_thread::yield(); // To minimize the likelihood of interrupting the flow between measurements.
-			(void)now(); // Preloading a function into cache
+			for (auto n = 0U; n < cache_warmup; ++n)
+			{	(void)vi_tmGetTicks();
+				(void)now();
+			}
 			auto next = vi_tmGetTicks(); // Preloading a function into cache
 			for (const auto prev = vi_tmGetTicks(); prev >= next; )
 			{	next = vi_tmGetTicks();
@@ -153,10 +163,14 @@ namespace vi_mt
 	inline misc::duration_t metric_t<Name, Func, Args...>::measurement_call_duration()
 	{
 		static constexpr auto CNT = 1'000U;
-		volatile std::invoke_result_t<decltype(vi_tmGetTicks)> _;
+		volatile tick_t _;
 
 		auto start = [&_]
 		{	std::this_thread::yield(); // To minimize the likelihood of interrupting the flow between measurements.
+			for (auto n = 0U; n < cache_warmup; ++n)
+			{	(void)vi_tmGetTicks();
+				(void)now();
+			}
 			_ = vi_tmGetTicks(); // Preload
 
 			// Are waiting for the start of a new time interval.
