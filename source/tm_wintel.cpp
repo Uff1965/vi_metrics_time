@@ -122,8 +122,7 @@ namespace vi_mt
 	METRIC("QueryUnbiasedInterruptTimePrecise()", tm_QueryUnbiasedInterruptTimePrecise);
 
 	count_t tm_GetSystemTimesKU()
-	{
-		// Retrieves system timing information.
+	{	// Retrieves system timing information.
 		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
 		FILETIME kt, ut;
 		::GetSystemTimes(nullptr, &kt, &ut);
@@ -134,20 +133,35 @@ namespace vi_mt
 	count_t tm_GetSystemTime()
 	{	SYSTEMTIME st;
 		::GetSystemTime(&st); // Retrieves the current system date and time.
+		return st.wMilliseconds + 1'000 * (st.wSecond + 60 * (st.wMinute + 60 * (st.wHour + 24 * st.wDay)));
+	}
+	METRIC("GetSystemTime()", tm_GetSystemTime);
+
+	count_t tm_GetSystemTimeFT()
+	{	SYSTEMTIME st;
+		::GetSystemTime(&st); // Retrieves the current system date and time.
 		FILETIME ft;
 		::SystemTimeToFileTime(&st, &ft);
 		return bit_cast(ft);
 	}
-	METRIC("GetSystemTime()", tm_GetSystemTime);
+	METRIC("GetSystemTime() FT", tm_GetSystemTimeFT);
 
 	count_t tm_GetLocalTime()
 	{	SYSTEMTIME st;
+		::GetLocalTime(&st); // Retrieves the current local date and time.
+		return st.wMilliseconds + 1'000 * (st.wSecond + 60 * (st.wMinute + 60 * (st.wHour + 24 * st.wDay)));
+	}
+	METRIC("GetLocalTime()", tm_GetLocalTime);
+
+	count_t tm_GetLocalTimeFT()
+	{
+		SYSTEMTIME st;
 		::GetLocalTime(&st); // Retrieves the current local date and time.
 		FILETIME ft;
 		::SystemTimeToFileTime(&st, &ft);
 		return bit_cast(ft);
 	}
-	METRIC("GetLocalTime()", tm_GetLocalTime);
+	METRIC("GetLocalTime() FT", tm_GetLocalTimeFT);
 
 	count_t tm_timeGetSystemTime()
 	{	MMTIME mmt; // The function retrieves the system time, in milliseconds.

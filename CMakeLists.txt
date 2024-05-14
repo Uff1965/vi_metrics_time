@@ -56,8 +56,8 @@ endif()
 
 ### Compiler ##################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
-  CXX_STANDARD 17
-  C_STANDARD 11
+  CXX_STANDARD 20
+  C_STANDARD 17
   CXX_EXTENSIONS OFF
   CXX_STANDARD_REQUIRED ON
   OUTPUT_NAME_RELEASE "${PROJECT_NAME}"
