@@ -43,13 +43,13 @@ namespace vi_mt
 
     inline count_t vi_rdtscp_lfence()
     {   uint32_t aux;
-        uint64_t result = __rdtscp(&aux);
+        const auto result = __rdtscp(&aux);
         _mm_lfence();
         return result;
     }
     METRIC("RDTSCP+LFENCE_INTRINSIC", vi_rdtscp_lfence);
 
-#   if defined(_M_X64) || defined(_M_AMD64)
+#   if defined(_M_X64) || defined(_M_AMD64) // MS compiler for x64 or ARM64EC
 
         inline count_t tm_cpuid_rdtsc()
         {   int cpuInfo[4];
@@ -79,56 +79,102 @@ namespace vi_mt
 #   elif defined(__x86_64__) || defined(__amd64__)
 
         inline count_t vi_asm_rdtsc()
-        {   uint64_t low, high;
-            __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "rdtsc            \n\t"
+                                  "movq %%rax, %0   \n\t"
+                                  "salq $32, %%rdx  \n\t"
+                                  "orq %%rdx, %0    \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "%rdx"
+            );
+            return result;
         }
 
         inline count_t vi_asm_rdtscp()
-        {   uint32_t aux;
-            uint64_t low, high;
-            __asm__ volatile("rdtscp" : "=a" (low), "=d" (high), "=c" (aux));
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "rdtscp           \n\t"
+                                  "movq %%rax, %0   \n\t"
+                                  "salq $32, %%rdx  \n\t"
+                                  "orq %%rdx, %0    \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "%rcx", "%rdx"
+            );
+            return result;
         }
 
         inline count_t vi_asm_cpuid_rdtsc()
-        {   unsigned long long low, high;
-            __asm__ volatile("xor %%eax, %%eax" ::: "%eax");
-            __asm__ volatile("cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
-            __asm__ volatile("rdtsc": "=a" (low), "=d" (high));
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "xor %%eax, %%eax"    \n\t"
+                                  "cpuid                \n\t"
+                                  "rdtsc                \n\t"
+                                  "movq %%rax, %0       \n\t"
+                                  "salq $32, %%rdx      \n\t"
+                                  "orq %%rdx, %0        \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "%rbx", "%rcx", "%rdx"
+                                );
+            return result;
         }
 
         inline count_t vi_asm_rdtscp_cpuid()
-        {   unsigned long aux;
-            unsigned long long low, high;
-            __asm__ volatile("rdtscp" : "=a" (low), "=d" (high), "=c" (aux));
-            __asm__ volatile("xor %%rax, %%rax"::: "%rax");
-            __asm__ volatile("cpuid" ::: "%rax", "%rbx", "%rcx", "%rdx");
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "rdtscp            \n\t"
+                                  "movq %%rax, %0    \n\t"
+                                  "salq $32, %%rdx   \n\t"
+                                  "orq %%rdx, %0     \n\t"
+                                  "xorl %%eax, %%eax \n\t"
+                                  "cpuid             \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "%rbx", "%rcx", "%rdx"
+                                );
+            return result;
         }
 
         inline count_t vi_asm_rdtscp_lfence()
-        {   uint32_t aux;
-            uint64_t low, high;
-            __asm__ volatile("rdtscp" : "=a" (low), "=d" (high), "=c" (aux));
-            __asm__ volatile("lfence" ::: "memory");
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "rdtscp               \n\t"
+                                  "lfence               \n\t"
+                                  "movq %%rax, %0       \n\t"
+                                  "salq $32, %%rdx      \n\t"
+                                  "orq %%rdx, %0        \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "rcx", "%rdx"
+                                );
+            return result;
         }
 
         inline count_t vi_asm_lfence_rdtsc()
-        {   uint64_t low, high;
-            __asm__ volatile("lfence" ::: "memory");
-            __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "lfence               \n\t"
+                                  "rdtsc                \n\t"
+                                  "movq %%rax, %0       \n\t"
+                                  "salq $32, %%rdx      \n\t"
+                                  "orq %%rdx, %0        \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "%rdx"
+                                );
+            return result;
         }
 
         inline count_t vi_asm_mfence_lfence_rdtsc()
-        {   uint64_t low, high;
-            __asm__ volatile("mfence" ::: "memory");
-            __asm__ volatile("lfence" ::: "memory");
-            __asm__ volatile("rdtsc" : "=a" (low), "=d" (high));
-            return (high << 32) | low;
+        {   uint64_t result;
+            __asm__ __volatile__( "mfence               \n\t"
+                                  "lfence               \n\t"
+                                  "rdtsc                \n\t"
+                                  "movq %%rax, %0       \n\t"
+                                  "salq $32, %%rdx      \n\t"
+                                  "orq %%rdx, %0        \n\t"
+                                : "=r"(result)
+                                :
+                                : "%rax", "%rdx"
+                                );
+            return result;
         }
 
 /* The RDPMC instruction can only be executed at privilege level 0.
@@ -185,7 +231,7 @@ namespace vi_mt
 
     inline count_t tm_mrs()
     {   count_t result;
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm __volatile__("mrs %0, cntvct_el0" : "=r"(result));
         return result;
     }
     METRIC("MRS", tm_mrs);

@@ -154,8 +154,7 @@ namespace vi_mt
 	METRIC("GetLocalTime()", tm_GetLocalTime);
 
 	count_t tm_GetLocalTimeFT()
-	{
-		SYSTEMTIME st;
+	{	SYSTEMTIME st;
 		::GetLocalTime(&st); // Retrieves the current local date and time.
 		FILETIME ft;
 		::SystemTimeToFileTime(&st, &ft);
