@@ -106,7 +106,7 @@ namespace vi_mt
 
         inline count_t vi_asm_cpuid_rdtsc()
         {   uint64_t result;
-            __asm__ __volatile__( "xor %%eax, %%eax"    \n\t"
+            __asm__ __volatile__( "xor %%eax, %%eax     \n\t"
                                   "cpuid                \n\t"
                                   "rdtsc                \n\t"
                                   "movq %%rax, %0       \n\t"
