@@ -80,16 +80,15 @@ namespace vi_mt
 #   elif defined(__x86_64__) || defined(__amd64__)
 
     inline count_t tm_cpuid_rdtsc()
-    {   int _ = 0;
+    {   unsigne int _ = 0;
         __get_cpuid(_, &_, &_, &_, &_);
         return __rdtsc();
     }
     METRIC("CPUID+RDTSC_INTRINSIC", tm_cpuid_rdtsc);
 
     inline count_t tm_rdtscp_cpuid()
-    {   unsigned int aux;
-        const auto result = __rdtscp(&aux);
-        int _ = 0;
+    {   unsigned int _;
+        const auto result = __rdtscp(&_);
         __get_cpuid(_, &_, &_, &_, &_);
         return result;
     }
