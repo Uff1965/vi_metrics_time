@@ -80,7 +80,7 @@ namespace vi_mt
 #   elif defined(__x86_64__) || defined(__amd64__)
 
     inline count_t tm_cpuid_rdtsc()
-    {   unsigne int _ = 0;
+    {   unsigned int _ = 0;
         __get_cpuid(_, &_, &_, &_, &_);
         return __rdtsc();
     }
