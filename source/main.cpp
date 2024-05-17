@@ -647,20 +647,20 @@ namespace
 			switch (g_stat)
 			{
 				case stat_t::avg:
-					std::cout << " (average of " << size << " measurements, excluding extreme values):\n";
+					std::cout << " (average of " << size << " measurements, excluding extreme values)";
 					break;
 				case stat_t::min:
-					std::cout << " (minimum of " << size << " measurements):\n";
+					std::cout << " (minimum of " << size << " measurements)";
 					break;
 				case stat_t::median:
-					std::cout << " (median of " << size << " measurements):\n";
+					std::cout << " (median of " << size << " measurements)";
 					break;
 				default:
-					std::cout << "ERROR - unknown prepare method\n";
+					std::cout << " (ERROR - unknown prepare method!!!)";
 					assert(false);
 			}
 		}
-		std::cout << data << std::endl;
+		std::cout << ":\n" << data << std::endl;
 	}
 } // namespace
 
