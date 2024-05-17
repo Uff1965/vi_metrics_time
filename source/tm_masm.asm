@@ -131,9 +131,9 @@ vi_mfence_lfence_rdtsc_asm ENDP
 
 vi_rdtscp_lfence_asm PROC
 	rdtscp
-	lfence
 	shl	rdx, 32
 	or	rax, rdx
+	lfence
 	ret	0
 vi_rdtscp_lfence_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
