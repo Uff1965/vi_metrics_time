@@ -81,7 +81,7 @@ namespace vi_mt
 
     inline count_t tm_cpuid_rdtsc()
     {   unsigned int _ = 0;
-        (void)__cpuid(_, &_, &_, &_, &_);
+        __cpuid(_, &_, &_, &_, &_);
         return __rdtsc();
     }
     METRIC("CPUID+RDTSC_INTRINSIC", tm_cpuid_rdtsc);
@@ -89,7 +89,7 @@ namespace vi_mt
     inline count_t tm_rdtscp_cpuid()
     {   unsigned int _;
         const auto result = __rdtscp(&_);
-        (void)__cpuid(_, &_, &_, &_, &_);
+        __cpuid(_, &_, &_, &_, &_);
         return result;
     }
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
