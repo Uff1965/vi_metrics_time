@@ -26,21 +26,21 @@ option casemap:none ; Директива option указывает MASM сделать все символы чувств
 ;	*If software requires RDTSCP to be executed only after all previous stores are globally visible, it can execute MFENCE immediately before RDTSCP.
 ;	*If software requires RDTSCP to be executed prior to execution of any subsequent instruction (including any memory accesses), it can execute LFENCE immediately after RDTSCP"
 
-public vi_asm_rdtsc, vi_asm_rdtscp
+public vi_rdtsc_asm, vi_rdtscp_asm
 
-vi_asm_rdtsc PROC
+vi_rdtsc_asm PROC
 	rdtsc
 	shl	rdx, 32
 	or	rax, rdx
 	ret	0
-vi_asm_rdtsc ENDP
+vi_rdtsc_asm ENDP
 
-vi_asm_rdtscp PROC
+vi_rdtscp_asm PROC
 	rdtscp
 	shl	rdx, 32
 	or	rax, rdx
 	ret	0
-vi_asm_rdtscp ENDP
+vi_rdtscp_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -54,13 +54,12 @@ vi_asm_rdtscp ENDP
 ;For example, CPUID can be executed at any privilege level to serialize instruction execution with no effect on program 
 ;flow, except that the EAX, EBX, ECX, and EDX registers are modified."
 
-public vi_asm_cpuid_rdtsc, vi_asm_rdtscp_cpuid
+public vi_cpuid_rdtsc_asm, vi_rdtscp_cpuid_asm
 
-vi_asm_cpuid_rdtsc PROC
+vi_cpuid_rdtsc_asm PROC
 	push	rbx
 
 	xor	eax, eax
-	xor	ecx, ecx
 	cpuid
 
 	rdtsc
@@ -69,9 +68,9 @@ vi_asm_cpuid_rdtsc PROC
 
 	pop	rbx
 	ret	0
-vi_asm_cpuid_rdtsc ENDP
+vi_cpuid_rdtsc_asm ENDP
 
-vi_asm_rdtscp_cpuid PROC
+vi_rdtscp_cpuid_asm PROC
 	push	rbx
 
 	rdtscp
@@ -80,13 +79,13 @@ vi_asm_rdtscp_cpuid PROC
 	mov	r8, rax
 
 	xor	eax, eax
-	xor	ecx, ecx
 	cpuid
 
 	mov	rax, r8
+
 	pop	rbx
 	ret	0
-vi_asm_rdtscp_cpuid ENDP
+vi_rdtscp_cpuid_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -111,32 +110,32 @@ vi_asm_rdtscp_cpuid ENDP
 ;Thus, it is not ordered with respect to executions of the LFENCE instruction; data can be brought into the caches
 ;speculatively just before, during, or after the execution of an LFENCE instruction."
 
-public vi_asm_lfence_rdtsc, vi_asm_mfence_lfence_rdtsc, vi_asm_rdtscp_lfence
+public vi_lfence_rdtsc_asm, vi_mfence_lfence_rdtsc_asm, vi_rdtscp_lfence_asm
 
-vi_asm_lfence_rdtsc PROC
+vi_lfence_rdtsc_asm PROC
 	lfence
 	rdtsc
 	shl	rdx, 32
 	or	rax, rdx
 	ret	0
-vi_asm_lfence_rdtsc ENDP
+vi_lfence_rdtsc_asm ENDP
 
-vi_asm_mfence_lfence_rdtsc PROC
+vi_mfence_lfence_rdtsc_asm PROC
 	mfence
 	lfence
 	rdtsc
 	shl	rdx, 32
 	or	rax, rdx
 	ret	0
-vi_asm_mfence_lfence_rdtsc ENDP
+vi_mfence_lfence_rdtsc_asm ENDP
 
-vi_asm_rdtscp_lfence PROC
+vi_rdtscp_lfence_asm PROC
 	rdtscp
 	lfence
 	shl	rdx, 32
 	or	rax, rdx
 	ret	0
-vi_asm_rdtscp_lfence ENDP
+vi_rdtscp_lfence_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

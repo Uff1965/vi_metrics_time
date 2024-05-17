@@ -69,13 +69,13 @@ namespace vi_mt
         METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
         // Functions from the file 'tm_masm.asm'.
-        extern "C" unsigned long long vi_asm_rdtsc(void);
-        extern "C" unsigned long long vi_asm_rdtscp(void);
-        extern "C" unsigned long long vi_asm_cpuid_rdtsc(void);
-        extern "C" unsigned long long vi_asm_rdtscp_cpuid(void);
-        extern "C" unsigned long long vi_asm_rdtscp_lfence(void);
-        extern "C" unsigned long long vi_asm_lfence_rdtsc(void);
-        extern "C" unsigned long long vi_asm_mfence_lfence_rdtsc(void);
+        extern "C" unsigned long long vi_rdtsc_asm(void);
+        extern "C" unsigned long long vi_rdtscp_asm(void);
+        extern "C" unsigned long long vi_cpuid_rdtsc_asm(void);
+        extern "C" unsigned long long vi_rdtscp_cpuid_asm(void);
+        extern "C" unsigned long long vi_rdtscp_lfence_asm(void);
+        extern "C" unsigned long long vi_lfence_rdtsc_asm(void);
+        extern "C" unsigned long long vi_mfence_lfence_rdtsc_asm(void);
 
 #   elif defined(__x86_64__) || defined(__amd64__)
 
@@ -94,48 +94,45 @@ namespace vi_mt
     }
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
-    inline count_t vi_asm_rdtsc()
+    inline count_t vi_rdtsc_asm()
         {   uint64_t result;
             __asm__ __volatile__( "rdtsc            \n\t"
-                                  "movq %%rax, %0   \n\t"
                                   "salq $32, %%rdx  \n\t"
-                                  "orq %%rdx, %0    \n\t"
-                                : "=r"(result)
+                                  "orq %%rdx, %%rax \n\t"
+                                : "=a"(result)
                                 :
-                                : "%rax", "%rdx"
+                                : "%rdx"
             );
             return result;
         }
 
-        inline count_t vi_asm_rdtscp()
+        inline count_t vi_rdtscp_asm()
         {   uint64_t result;
             __asm__ __volatile__( "rdtscp           \n\t"
-                                  "movq %%rax, %0   \n\t"
                                   "salq $32, %%rdx  \n\t"
-                                  "orq %%rdx, %0    \n\t"
-                                : "=r"(result)
+                                  "orq %%rdx, %%rax \n\t"
+                                : "=a"(result)
                                 :
-                                : "%rax", "%rcx", "%rdx"
+                                : "%rcx", "%rdx"
             );
             return result;
         }
 
-        inline count_t vi_asm_cpuid_rdtsc()
+        inline count_t vi_cpuid_rdtsc_asm()
         {   uint64_t result;
             __asm__ __volatile__( "xor %%eax, %%eax     \n\t"
                                   "cpuid                \n\t"
                                   "rdtsc                \n\t"
-                                  "movq %%rax, %0       \n\t"
                                   "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %0        \n\t"
-                                : "=r"(result)
+                                  "orq %%rdx, %%rax     \n\t"
+                                : "=a"(result)
                                 :
-                                : "%rax", "%rbx", "%rcx", "%rdx"
+                                : "%rbx", "%rcx", "%rdx"
                                 );
             return result;
         }
 
-        inline count_t vi_asm_rdtscp_cpuid()
+        inline count_t vi_rdtscp_cpuid_asm()
         {   uint64_t result;
             __asm__ __volatile__( "rdtscp            \n\t"
                                   "movq %%rax, %0    \n\t"
@@ -150,45 +147,42 @@ namespace vi_mt
             return result;
         }
 
-        inline count_t vi_asm_rdtscp_lfence()
+        inline count_t vi_rdtscp_lfence_asm()
         {   uint64_t result;
             __asm__ __volatile__( "rdtscp               \n\t"
-                                  "lfence               \n\t"
-                                  "movq %%rax, %0       \n\t"
                                   "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %0        \n\t"
-                                : "=r"(result)
+                                  "orq %%rdx, %%rax     \n\t"
+                                  "lfence               \n\t"
+                                : "=a"(result)
                                 :
-                                : "%rax", "rcx", "%rdx"
+                                : "rcx", "%rdx"
                                 );
             return result;
         }
 
-        inline count_t vi_asm_lfence_rdtsc()
+        inline count_t vi_lfence_rdtsc_asm()
         {   uint64_t result;
             __asm__ __volatile__( "lfence               \n\t"
                                   "rdtsc                \n\t"
-                                  "movq %%rax, %0       \n\t"
                                   "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %0        \n\t"
-                                : "=r"(result)
+                                  "orq %%rdx, %%rax     \n\t"
+                                : "=a"(result)
                                 :
-                                : "%rax", "%rdx"
+                                : "%rdx"
                                 );
             return result;
         }
 
-        inline count_t vi_asm_mfence_lfence_rdtsc()
+        inline count_t vi_mfence_lfence_rdtsc_asm()
         {   uint64_t result;
             __asm__ __volatile__( "mfence               \n\t"
                                   "lfence               \n\t"
                                   "rdtsc                \n\t"
-                                  "movq %%rax, %0       \n\t"
                                   "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %0        \n\t"
-                                : "=r"(result)
+                                  "orq %%rdx, %%rax     \n\t"
+                                : "=a"(result)
                                 :
-                                : "%rax", "%rdx"
+                                : "%rdx"
                                 );
             return result;
         }
@@ -235,13 +229,13 @@ namespace vi_mt
     */
 #   endif // GNU on Intel
 
-    METRIC("RDTSC_ASM", vi_asm_rdtsc);
-    METRIC("RDTSCP_ASM", vi_asm_rdtscp);
-    METRIC("CPUID+RDTSC_ASM", vi_asm_cpuid_rdtsc);
-    METRIC("RDTSCP+CPUID_ASM", vi_asm_rdtscp_cpuid);
-    METRIC("RDTSCP+LFENCE_ASM", vi_asm_rdtscp_lfence);
-    METRIC("LFENCE+RDTSC_ASM", vi_asm_lfence_rdtsc);
-    METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_asm_mfence_lfence_rdtsc);
+    METRIC("RDTSC_ASM", vi_rdtsc_asm);
+    METRIC("RDTSCP_ASM", vi_rdtscp_asm);
+    METRIC("CPUID+RDTSC_ASM", vi_cpuid_rdtsc_asm);
+    METRIC("RDTSCP+CPUID_ASM", vi_rdtscp_cpuid_asm);
+    METRIC("RDTSCP+LFENCE_ASM", vi_rdtscp_lfence_asm);
+    METRIC("LFENCE+RDTSC_ASM", vi_lfence_rdtsc_asm);
+    METRIC("MFENCE+LFENCE+RDTSC_ASM", vi_mfence_lfence_rdtsc_asm);
 
 #elif __ARM_ARCH >= 8 // ARMv8 (RaspberryPi4)
 
