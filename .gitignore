@@ -39,3 +39,6 @@ bin
 ~$*.xlsx
 ~$*.docx
 ~*.tmp
+
+# Executable file for Linux
+**/vi_metrics_time
