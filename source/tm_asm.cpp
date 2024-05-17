@@ -10,6 +10,7 @@
 #   pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
 #elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
 #   include <x86intrin.h>
+#   include <cpuid.h>
 #endif
 
 #define METRIC(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
@@ -80,7 +81,7 @@ namespace vi_mt
 
     inline count_t tm_cpuid_rdtsc()
     {   int _ = 0;
-        __cpuid(_, _, _, _, _);
+        __get_cpuid(_, &_, &_, &_, &_);
         return __rdtsc();
     }
     METRIC("CPUID+RDTSC_INTRINSIC", tm_cpuid_rdtsc);
@@ -89,7 +90,7 @@ namespace vi_mt
     {   unsigned int aux;
         const auto result = __rdtscp(&aux);
         int _ = 0;
-        __cpuid(_, _, _, _, _);
+        __get_cpuid(_, &_, &_, &_, &_);
         return result;
     }
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
