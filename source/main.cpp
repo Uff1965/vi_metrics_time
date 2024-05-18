@@ -189,30 +189,29 @@ namespace
 	void prefix()
 	{
 #ifdef _WIN32
-#	pragma warning(suppress: 4996)
-		if (const auto computername = std::getenv("COMPUTERNAME"))
-		{	std::cout << "Computer: \'" << computername << "\'\n";
-		}
-
-		const char subkey[] = "Hardware\\Description\\System\\CentralProcessor\\0";
-		const char value[] = "ProcessorNameString";
+		constexpr char subkey[] = "Hardware\\Description\\System\\CentralProcessor\\0";
+		constexpr char value[] = "ProcessorNameString";
 		std::string buff("Unknown");
 		auto len = static_cast<DWORD>(buff.size());
-		do {
-			buff.resize(len); //-V106
+		do
+		{	buff.resize(len); //-V106
 		} while (ERROR_MORE_DATA == ::RegGetValueA(HKEY_LOCAL_MACHINE, subkey, value, RRF_RT_REG_SZ, NULL, buff.data(), &len)); //-V2571
 		std::cout << "Processor: " << buff;
-#elif defined(__linux__)
-		if(const auto hostname = std::getenv("HOSTNAME"))
-		{	std::cout << "Computer: \'" << hostname << "\'\n";
-		}
 
-		[[maybe_unused]] int _;
-		_ = std::system("lscpu | grep \'Model name:\'");
-		_ = std::system("lscpu | grep \'CPU max\'");
-		_ = std::system("lscpu | grep \'CPU min\'");
+		constexpr char COMPUTERNAME[] = "COMPUTERNAME";
+#elif defined(__linux__)
+		(void)std::system("lscpu | grep \'Model name:\'");
+		(void)std::system("lscpu | grep \'CPU max\'");
+		(void)std::system("lscpu | grep \'CPU min\'");
+
+		constexpr char COMPUTERNAME[] = "HOSTNAME";
 #endif
 		endl(std::cout);
+
+#pragma warning(suppress: 4996)
+		if (const auto computername = std::getenv(COMPUTERNAME))
+		{	std::cout << "Computer: \'" << computername << "\'\n";
+		}
 	}
 
 	void suffix()
