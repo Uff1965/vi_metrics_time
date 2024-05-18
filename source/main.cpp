@@ -189,6 +189,11 @@ namespace
 	void prefix()
 	{
 #ifdef _WIN32
+#	pragma warning(suppress: 4996)
+		if (const auto computername = std::getenv("COMPUTERNAME"))
+		{	std::cout << "Computer: \'" << computername << "\'\n";
+		}
+
 		constexpr char subkey[] = "Hardware\\Description\\System\\CentralProcessor\\0";
 		constexpr char value[] = "ProcessorNameString";
 		std::string buff("Unknown");
@@ -197,20 +202,14 @@ namespace
 		{	buff.resize(len); //-V106
 		} while (ERROR_MORE_DATA == ::RegGetValueA(HKEY_LOCAL_MACHINE, subkey, value, RRF_RT_REG_SZ, NULL, buff.data(), &len)); //-V2571
 		std::cout << "Processor: " << buff << '\n';
-
-		constexpr char COMPUTERNAME[] = "COMPUTERNAME";
 #elif defined(__linux__)
 		(void)std::system("lscpu | grep \'Model name:\'");
 		(void)std::system("lscpu | grep \'CPU max\'");
 		(void)std::system("lscpu | grep \'CPU min\'");
 
-		constexpr char COMPUTERNAME[] = "HOSTNAME";
+		std::cout << "Computer: ";
+		(void)std::system("echo $HOSTNAME");
 #endif
-
-#pragma warning(suppress: 4996)
-		if (const auto computername = std::getenv(COMPUTERNAME))
-		{	std::cout << "Computer: \'" << computername << "\'\n";
-		}
 	}
 
 	void suffix()
