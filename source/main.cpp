@@ -53,7 +53,7 @@ namespace
 #else
 		auto result = "Debug"s;
 #endif
-		result += " \'vi_mtrics_time\' " __DATE__ " " __TIME__ "."sv;
+		result += " \'vi_metrics_time\' " __DATE__ " " __TIME__ "."sv;
 		return result;
 	}
 
@@ -188,6 +188,9 @@ namespace
 	void prefix()
 	{
 #ifdef _WIN32
+		const std::string computername = std::getenv("COMPUTERNAME");
+		std::cout << "Computer: \'" << computername << "\'.\n";
+
 		const char subkey[] = "Hardware\\Description\\System\\CentralProcessor\\0";
 		const char value[] = "ProcessorNameString";
 		std::string buff("Unknown");
@@ -197,6 +200,9 @@ namespace
 		} while (ERROR_MORE_DATA == ::RegGetValueA(HKEY_LOCAL_MACHINE, subkey, value, RRF_RT_REG_SZ, NULL, buff.data(), &len)); //-V2571
 		std::cout << "Processor: " << buff;
 #elif defined(__linux__)
+		const std::string hostname = std::getenv("HOSTNAME");
+		std::cout << "Computer: \'" << hostname << "\'.\n";
+
 		[[maybe_unused]] int _;
 		_ = std::system("lscpu | grep \'Model name:\'");
 		_ = std::system("lscpu | grep \'CPU max\'");
