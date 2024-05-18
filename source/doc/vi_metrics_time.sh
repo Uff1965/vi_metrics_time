@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo START: $(date '+%Y-%m-%d')
-echo
+echo ""
 
 program_name=vi_metrics_time
 
@@ -24,15 +24,18 @@ fi
 
 par="-r $rep $filter"
 echo Parameters: $par
-echo
+echo ""
+
+#Push a HOSTNAME into the child process
+export HOSTNAME=$HOSTNAME
 
 for i in $(seq 1 $cnt)
 do
 	echo $(date '+%H:%M:%S'): Started measurement $i of $cnt...
-	sudo nice -n -5 ./$program_name $par >$program_name.$HOSTNAME.$i.txt
+	sudo -E nice -n -5 ./$program_name $par >$program_name.$HOSTNAME.$i.txt
 #	sleep 1
 	echo done.
-	echo
+	echo ""
 done
 
 echo FINISH: $(date '+%Y-%m-%d %H:%M:%S')
