@@ -196,7 +196,7 @@ namespace
 		do
 		{	buff.resize(len); //-V106
 		} while (ERROR_MORE_DATA == ::RegGetValueA(HKEY_LOCAL_MACHINE, subkey, value, RRF_RT_REG_SZ, NULL, buff.data(), &len)); //-V2571
-		std::cout << "Processor: " << buff;
+		std::cout << "Processor: " << buff << '\n';
 
 		constexpr char COMPUTERNAME[] = "COMPUTERNAME";
 #elif defined(__linux__)
@@ -206,7 +206,6 @@ namespace
 
 		constexpr char COMPUTERNAME[] = "HOSTNAME";
 #endif
-		endl(std::cout);
 
 #pragma warning(suppress: 4996)
 		if (const auto computername = std::getenv(COMPUTERNAME))
