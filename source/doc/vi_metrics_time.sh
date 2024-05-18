@@ -16,7 +16,7 @@ echo Parameters: "'"$par"'"
 echo ""
 
 #Push a HOSTNAME into the child process
-export HOSTNAME=$HOSTNAME
+export HOSTNAME=$(hostname)
 
 for i in $(seq 1 $cnt)
 do
