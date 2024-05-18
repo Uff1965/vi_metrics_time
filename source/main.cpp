@@ -9,6 +9,7 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -188,8 +189,10 @@ namespace
 	void prefix()
 	{
 #ifdef _WIN32
-		const std::string computername = std::getenv("COMPUTERNAME");
-		std::cout << "Computer: \'" << computername << "\'.\n";
+#	pragma warning(suppress: 4996)
+		if (const auto computername = std::getenv("COMPUTERNAME"))
+		{	std::cout << "Computer: \'" << computername << "\'\n";
+		}
 
 		const char subkey[] = "Hardware\\Description\\System\\CentralProcessor\\0";
 		const char value[] = "ProcessorNameString";
@@ -200,8 +203,9 @@ namespace
 		} while (ERROR_MORE_DATA == ::RegGetValueA(HKEY_LOCAL_MACHINE, subkey, value, RRF_RT_REG_SZ, NULL, buff.data(), &len)); //-V2571
 		std::cout << "Processor: " << buff;
 #elif defined(__linux__)
-		const std::string hostname = std::getenv("HOSTNAME");
-		std::cout << "Computer: \'" << hostname << "\'.\n";
+		if(const auto hostname = std::getenv("HOSTNAME"))
+		{	std::cout << "Computer: \'" << hostname << "\'\n";
+		}
 
 		[[maybe_unused]] int _;
 		_ = std::system("lscpu | grep \'Model name:\'");
