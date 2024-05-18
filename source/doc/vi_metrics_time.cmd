@@ -6,13 +6,17 @@ ECHO.
 SET cnt=1
 IF NOT %1.==. SET cnt=%1
 
-SET rep=20
-IF NOT %2.==. SET rep=%2
+SET par=
 
-IF NOT %3.==. SET filter=-i %3
+:loop
+SHIFT
+IF "%~1"=="" GOTO endloop
+IF NOT "%par%"=="" SET par=%par% 
+SET par=%par%%1
+GOTO loop
+:endloop
 
-SET par=-r %rep% %filter%
-ECHO Parameters: %par%
+ECHO Parameters: '%par%'
 ECHO.
 
 FOR /L %%n IN (1, 1, %cnt%) DO (
