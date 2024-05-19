@@ -206,7 +206,7 @@ namespace vi_mt
         inline count_t vi_asm_rdpmc_instructions()
         {   uint64_t low, high;
             uint32_t ecx = 1U << 30;
-            __asm __volatile("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
+            __asm__ __volatile__("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
             return (high << 32) | low;
         }
         METRIC("RDPMC_INSTRUCTIONS_ASM", vi_asm_rdpmc_instructions);
@@ -214,7 +214,7 @@ namespace vi_mt
         inline count_t vi_asm_rdpmc_actual_cycles()
         {   uint64_t low, high;
             uint32_t ecx = (1U << 30) + 1;
-            __asm __volatile("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
+            __asm__ __volatile__("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
             return (high << 32) | low;
         }
         METRIC("RDPMC_ACTUAL_CYCLES_ASM", vi_asm_rdpmc_actual_cycles);
@@ -222,7 +222,7 @@ namespace vi_mt
         inline count_t vi_asm_rdpmc_reference_cycles()
         {   uint64_t low, high;
             uint32_t ecx = (1U << 30) + 1;
-            __asm __volatile("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
+            __asm__ __volatile__("rdpmc" : "=a" (low), "=d" (high) : "c"(ecx));
             return (high << 32) | low;
         }
         METRIC("RDPMC_REFERENCE_CYCLES_ASM", vi_asm_rdpmc_reference_cycles);
@@ -241,7 +241,7 @@ namespace vi_mt
 
     inline count_t tm_mrs()
     {   count_t result;
-        asm __volatile__("mrs %0, cntvct_el0" : "=r"(result));
+        __asm__ __volatile__("mrs %0, cntvct_el0" : "=r"(result));
         return result;
     }
     METRIC("MRS", tm_mrs);

@@ -189,7 +189,6 @@ namespace
 	void prefix()
 	{
 #ifdef _WIN32
-#	pragma warning(suppress: 4996)
 		constexpr char subkey[] = "Hardware\\Description\\System\\CentralProcessor\\0";
 		constexpr char value[] = "ProcessorNameString";
 		std::string buff("Unknown");

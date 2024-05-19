@@ -156,7 +156,7 @@ vi_rdtscp_lfence_asm ENDP
 ;   unsigned long a, d, c;
 ;
 ;   c = (1UL<<30)+1;
-;   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+;   __asm__ __volatile__("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
 ;
 ;   return (a | (d << 32));
 ;	ret	0
@@ -166,7 +166,7 @@ vi_rdtscp_lfence_asm ENDP
 ;   unsigned long a, d, c;
 ;
 ;   c = (1UL<<30)+2;
-;   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+;   __asm__ __volatile__("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
 ;
 ;   return (a | (d << 32));
 ;	ret	0
