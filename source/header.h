@@ -17,6 +17,9 @@
 #include <type_traits>
 #include <vector>
 
+#define chSTR3( a, b ) a##b
+#define chSTR4( a, b ) chSTR3( a, b )
+
 namespace vi_mt
 {
 	namespace ch = std::chrono;
@@ -224,9 +227,6 @@ namespace vi_mt
 		return result;
 	}
 } // namespace vi_mt
-
-#define chSTR3( a, b ) a##b
-#define chSTR4( a, b ) chSTR3( a, b )
 
 #define TM_METRIC(title, ...) \
 static const char chSTR4(title_, __LINE__)[] = title; \

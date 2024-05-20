@@ -3,7 +3,8 @@
 
 #include "header.h"
 
-// Something was peeped in: https://chromium.googlesource.com/external/gperftools/+/master/src/base/cycleclock.h
+// "RDTSCP versus RDTSC + CPUID" https://stackoverflow.com/questions/27693145/rdtscp-versus-rdtsc-cpuid
+// "Difference between rdtscp, rdtsc : memory and cpuid / rdtsc?" https://stackoverflow.com/questions/12631856/difference-between-rdtscp-rdtsc-memory-and-cpuid-rdtsc
 
 #if defined(_M_X64) || defined(_M_AMD64) // MS compiler for x64 or ARM64EC
 #	include <intrin.h>
