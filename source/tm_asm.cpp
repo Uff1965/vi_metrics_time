@@ -3,6 +3,7 @@
 
 #include "header.h"
 
+// "Встроенный ассемблер GCC" https://av-assembler.ru/asm/high-level-languages/assembler-gcc.php
 // "RDTSCP versus RDTSC + CPUID" https://stackoverflow.com/questions/27693145/rdtscp-versus-rdtsc-cpuid
 // "Difference between rdtscp, rdtsc : memory and cpuid / rdtsc?" https://stackoverflow.com/questions/12631856/difference-between-rdtscp-rdtsc-memory-and-cpuid-rdtsc
 
@@ -96,97 +97,55 @@ namespace vi_mt
     METRIC("RDTSCP+CPUID_INTRINSIC", tm_rdtscp_cpuid);
 
     inline count_t vi_rdtsc_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "rdtsc            \n\t"
-                                  "salq $32, %%rdx  \n\t"
-                                  "orq %%rdx, %%rax \n\t"
-                                : "=a"(result)
-                                :
-                                : "%rdx"
-            );
-            return result;
-        }
+    {   uint64_t low, high;
+        __asm__ __volatile__( "rdtsc" : "=a"(low), "=d"(high));
+        return (high << 32) | low;
+    }
 
-        inline count_t vi_rdtscp_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "rdtscp           \n\t"
-                                  "salq $32, %%rdx  \n\t"
-                                  "orq %%rdx, %%rax \n\t"
-                                : "=a"(result)
-                                :
-                                : "%rcx", "%rdx"
-            );
-            return result;
-        }
+    inline count_t vi_rdtscp_asm()
+    {   uint64_t low, high;
+        __asm__ __volatile__("rdtscp" : "=a"(low), "=d"(high) :: "%rcx");
+        return (high << 32) | low;
+    }
 
-        inline count_t vi_cpuid_rdtsc_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "xor %%eax, %%eax     \n\t"
-                                  "cpuid                \n\t"
-                                  "rdtsc                \n\t"
-                                  "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %%rax     \n\t"
-                                : "=a"(result)
-                                :
-                                : "%rbx", "%rcx", "%rdx"
-                                );
-            return result;
-        }
+    inline count_t vi_cpuid_rdtsc_asm()
+    {   uint64_t low, high;
+        __asm__ __volatile__( "cpuid; rdtsc" : "=a"(low), "=d"(high) : "a"(0) : "%rbx", "%rcx");
+        return (high << 32) | low;
+    }
 
-        inline count_t vi_rdtscp_cpuid_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "rdtscp            \n\t"
-                                  "movq %%rax, %0    \n\t"
-                                  "salq $32, %%rdx   \n\t"
-                                  "orq %%rdx, %0     \n\t"
-                                  "xorl %%eax, %%eax \n\t"
-                                  "cpuid             \n\t"
-                                : "=r"(result)
-                                :
-                                : "%rax", "%rbx", "%rcx", "%rdx"
-                                );
-            return result;
-        }
+    inline count_t vi_rdtscp_cpuid_asm()
+    {   uint64_t result;
+        __asm__ __volatile__( "rdtscp               \n\t"
+                              "movq %%rax, %0       \n\t"
+                              "salq $32, %%rdx      \n\t"
+                              "orq %%rdx, %0        \n\t"
+                              "xorl %%eax, %%eax    \n\t"
+                              "cpuid                \n\t"
+                            : "=r"(result)
+                            :
+                            : "%rax", "%rbx", "%rcx", "%rdx"
+                            );
+        return result;
+    }
 
-        inline count_t vi_rdtscp_lfence_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "rdtscp               \n\t"
-                                  "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %%rax     \n\t"
-                                  "lfence               \n\t"
-                                : "=a"(result)
-                                :
-                                : "rcx", "%rdx"
-                                );
-            return result;
-        }
+    inline count_t vi_rdtscp_lfence_asm()
+    {   uint64_t low, high;
+        __asm__ __volatile__( "rdtscp; lfence" : "=a"(low), "=d"(high) :: "%rcx" );
+        return (high << 32) | low;
+    }
 
-        inline count_t vi_lfence_rdtsc_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "lfence               \n\t"
-                                  "rdtsc                \n\t"
-                                  "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %%rax     \n\t"
-                                : "=a"(result)
-                                :
-                                : "%rdx"
-                                );
-            return result;
-        }
+    inline count_t vi_lfence_rdtsc_asm()
+    {   uint64_t low, high;
+        __asm__ __volatile__( "lfence; rdtsc" : "=a"(low), "=d"(high) );
+        return (high << 32) | low;
+    }
 
-        inline count_t vi_mfence_lfence_rdtsc_asm()
-        {   uint64_t result;
-            __asm__ __volatile__( "mfence               \n\t"
-                                  "lfence               \n\t"
-                                  "rdtsc                \n\t"
-                                  "salq $32, %%rdx      \n\t"
-                                  "orq %%rdx, %%rax     \n\t"
-                                : "=a"(result)
-                                :
-                                : "%rdx"
-                                );
-            return result;
-        }
+    inline count_t vi_mfence_lfence_rdtsc_asm()
+    {   uint64_t low, high;
+        __asm__ __volatile__( "mfence; lfence; rdtsc" : "=a"(low), "=d"(high) );
+        return (high << 32) | low;
+    }
 
 /* The RDPMC instruction can only be executed at privilege level 0.
         inline count_t vi_rdpmc_instructions()

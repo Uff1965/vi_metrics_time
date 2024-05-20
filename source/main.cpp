@@ -200,9 +200,10 @@ namespace
 
 		constexpr char COMPUTERNAME[] = "COMPUTERNAME";
 #elif defined(__linux__)
-		(void)std::system("lscpu | grep \'Model name:\'");
-		(void)std::system("lscpu | grep \'CPU max\'");
-		(void)std::system("lscpu | grep \'CPU min\'");
+		int _; // Suppress warning about ignoring return value of ‘int system(const char*)’
+		_ = std::system("lscpu | grep \'Model name:\'");
+		_ = std::system("lscpu | grep \'CPU max\'");
+		_ = std::system("lscpu | grep \'CPU min\'");
 
 		constexpr char COMPUTERNAME[] = "HOSTNAME";
 #endif
