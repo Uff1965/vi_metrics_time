@@ -81,7 +81,7 @@ namespace vi_mt
 	double metric_t<Name, Func, Args...>::measurement_discreteness()
 	{	auto CNT = 4U;
 		tick_t last, first;
-		for(;;)
+		for (;; CNT *= 8)
 		{	std::this_thread::yield(); // Reduce the likelihood of interrupting measurements by switching threads.
 			const auto limit = now() + ch::microseconds{ 128 };
 			for (auto n = 0U; n < cache_warmup; ++n)
@@ -89,8 +89,8 @@ namespace vi_mt
 			}
 
 			for (auto cnt = CNT; cnt; )
-			{	if (const auto c = vi_tmGetTicks(); c != last)
-				{	last = c;
+			{	if (const auto current = vi_tmGetTicks(); current != last)
+				{	last = current;
 					--cnt;
 				}
 			}
@@ -98,8 +98,6 @@ namespace vi_mt
 			if (now() > limit)
 			{	break;
 			}
-
-			CNT *= 8;
 		}
 
 		return static_cast<double>(last - first) / static_cast<double>(CNT);

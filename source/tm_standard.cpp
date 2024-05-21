@@ -15,7 +15,7 @@ namespace vi_mt
 
 	count_t tm_timespec_get()
 	{	struct timespec ts;
-		::timespec_get(&ts, TIME_UTC);
+		(void)::timespec_get(&ts, TIME_UTC);
 		return 1'000'000'000ULL * ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC_C("timespec_get(TIME_UTC)", tm_timespec_get);
