@@ -1,14 +1,12 @@
 ; "Ассемблер в Linux для программистов C" https://ru.wikibooks.org/wiki/%D0%90%D1%81%D1%81%D0%B5%D0%BC%D0%B1%D0%BB%D0%B5%D1%80_%D0%B2_Linux_%D0%B4%D0%BB%D1%8F_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%81%D1%82%D0%BE%D0%B2_C
 
-option casemap:none ; Директива option указывает MASM сделать все символы чувствительными к регистру.
+option casemap:none ; The 'option casemap:none' directive tells MASM to make all symbols case-sensitive.
 
 .data
-;	text byte "Hello from MASM!", 10, 0 ; определяем выводимые данные
+;	text byte "Hello from MASM!", 10, 0 ; defining the data to be output
 
 .code
-;	externdef printf:proc ; подключаем определение функции printf() из C/C++
-
-;оператор public указывает, что функция будет видна вне исходного/объектного файла MASM.
+;	externdef printf:proc ; connecting the definition of the printf() function from C/C++
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Clear functions:
@@ -25,7 +23,7 @@ option casemap:none ; Директива option указывает MASM сделать все символы чувств
 ;	*If software requires RDTSCP to be executed only after all previous stores are globally visible, it can execute MFENCE immediately before RDTSCP.
 ;	*If software requires RDTSCP to be executed prior to execution of any subsequent instruction (including any memory accesses), it can execute LFENCE immediately after RDTSCP"
 
-public vi_rdtsc_asm, vi_rdtscp_asm
+public vi_rdtsc_asm, vi_rdtscp_asm ; The 'public' operator indicates that the function will be visible outside of the MASM source/object file.
 
 vi_rdtsc_asm PROC
 	rdtsc
@@ -41,7 +39,6 @@ vi_rdtscp_asm PROC
 	ret	0
 vi_rdtscp_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Functions using CPUID:
@@ -86,7 +83,6 @@ vi_rdtscp_cpuid_asm PROC
 	ret	0
 vi_rdtscp_cpuid_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Functions using FENCE:
@@ -136,8 +132,6 @@ vi_rdtscp_lfence_asm PROC
 	ret	0
 vi_rdtscp_lfence_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; The RDPMC instruction can only be executed at privilege level 0.

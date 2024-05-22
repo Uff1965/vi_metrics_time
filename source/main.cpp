@@ -5,7 +5,6 @@
 #include "misc.h"
 
 #include <algorithm>
-#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -322,7 +321,7 @@ namespace
 			std::string do_grouping() const override { return "\3"; } // groups of 3 digit
 		};
 	public:
-		locale_with_grouping(const std::locale& loc) : std::locale(loc, new space_out_t) {}
+		explicit locale_with_grouping(const std::locale& loc) : std::locale(loc, new space_out_t) {}
 	};
 
 	struct str_out
@@ -554,7 +553,6 @@ namespace
 
 		const auto begin = data.begin();
 		auto end = data.end();
-		auto size = static_cast<double>(data.size()); //-V203
 
 		// Average.
 		auto aveg = average(begin, end);
@@ -562,7 +560,6 @@ namespace
 		// We filter out large deviations.
 		if (const auto it = std::remove_if(begin, end, [lim = aveg * 1.2](auto v) {return v >= lim; }); it != end)
 		{	end = it;
-			size = static_cast<double>(std::distance(begin, end));
 			aveg = average(begin, end);
 		}
 
@@ -580,7 +577,7 @@ namespace
 	}
 
 	std::pair<double, double> calc_stat(std::vector<double> data)
-	{	auto calc_stat = calc_stat_median;
+	{	decltype(&calc_stat_median) calc_stat;
 		switch (g_stat)
 		{	default:
 				assert(false);

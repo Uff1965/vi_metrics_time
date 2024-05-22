@@ -38,8 +38,13 @@ if(Boost_FOUND)
     list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_boost.cpp")
 endif()
 
-if(DEFINED WIN32)
-    list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_masm.asm")
+vi_macro_show(CMAKE_SYSTEM_PROCESSOR)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
+    # Команды для x64 архитектуры
+    if(DEFINED WIN32)
+        list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_masm_x64.asm")
+    endif()
+        list(APPEND FILE_GROUP "${VI_SOURCE_DIR}/tm_masm_x64.h")
 endif()
 
 source_group("Source Files" FILES ${FILE_GROUP})
