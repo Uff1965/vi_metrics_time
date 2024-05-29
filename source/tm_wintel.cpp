@@ -16,12 +16,16 @@
 
 namespace
 {
-	vi_mt::count_t bit_cast(FILETIME src) noexcept
+	inline vi_mt::count_t to_count(FILETIME src) noexcept
 	{	static_assert(sizeof(vi_mt::count_t) == sizeof(FILETIME));
 
 		vi_mt::count_t result;
 		std::memcpy(&result, &src, sizeof(result));
 		return result;
+	}
+
+	inline vi_mt::count_t to_count(const SYSTEMTIME& st) noexcept
+	{	return st.wMilliseconds + 1'000UL * (st.wSecond + 60UL * (st.wMinute + 60UL * (st.wHour + 24UL * st.wDay)));
 	}
 }
 
@@ -45,14 +49,14 @@ namespace vi_mt
 	count_t tm_GetThreadTimes()
 	{	FILETIME kt, ut, _; // Thread kernel mode and user mode times are amounts of time.
 		::GetThreadTimes(::GetCurrentThread(), &_, &_, &kt, &ut);
-		return bit_cast(kt) + bit_cast(ut);
+		return to_count(kt) + to_count(ut);
 	}
 	METRIC("GetThreadTimes()", tm_GetThreadTimes);
 
 	count_t tm_GetProcessTimes()
 	{	FILETIME kt, ut, _; // Process kernel mode and user mode times are amounts of time.
 		::GetProcessTimes(::GetCurrentProcess(), &_, &_, &kt, &ut);
-		return bit_cast(kt) + bit_cast(ut);
+		return to_count(kt) + to_count(ut);
 	}
 	METRIC("GetProcessTimes()", tm_GetProcessTimes);
 
@@ -73,14 +77,14 @@ namespace vi_mt
 	count_t tm_GetSystemTimePreciseAsFileTime()
 	{	FILETIME ft; // The function retrieves the current system date and time with the highest possible level of precision (<1us).
 		::GetSystemTimePreciseAsFileTime(&ft);
-		return bit_cast(ft);
+		return to_count(ft);
 	}
 	METRIC("GetSystemTimePreciseAsFileTime()", tm_GetSystemTimePreciseAsFileTime);
 
 	count_t tm_GetSystemTimeAsFileTime()
 	{	FILETIME ft; // Retrieves the current system date and time.
 		::GetSystemTimeAsFileTime(&ft);
-		return bit_cast(ft);
+		return to_count(ft);
 	}
 	METRIC("GetSystemTimeAsFileTime()", tm_GetSystemTimeAsFileTime);
 
@@ -126,41 +130,23 @@ namespace vi_mt
 		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
 		FILETIME kt, ut;
 		::GetSystemTimes(nullptr, &kt, &ut);
-		return bit_cast(kt) + bit_cast(ut);
+		return to_count(kt) + to_count(ut);
 	}
 	METRIC("GetSystemTimes() K+U", tm_GetSystemTimesKU);
 
 	count_t tm_GetSystemTime()
 	{	SYSTEMTIME st;
 		::GetSystemTime(&st); // Retrieves the current system date and time.
-		return st.wMilliseconds + 1'000 * (st.wSecond + 60 * (st.wMinute + 60 * (st.wHour + 24 * st.wDay)));
+		return to_count(st);
 	}
 	METRIC("GetSystemTime()", tm_GetSystemTime);
-
-	count_t tm_GetSystemTimeFT()
-	{	SYSTEMTIME st;
-		::GetSystemTime(&st); // Retrieves the current system date and time.
-		FILETIME ft;
-		::SystemTimeToFileTime(&st, &ft);
-		return bit_cast(ft);
-	}
-	METRIC("GetSystemTime() FT", tm_GetSystemTimeFT);
 
 	count_t tm_GetLocalTime()
 	{	SYSTEMTIME st;
 		::GetLocalTime(&st); // Retrieves the current local date and time.
-		return st.wMilliseconds + 1'000 * (st.wSecond + 60 * (st.wMinute + 60 * (st.wHour + 24 * st.wDay)));
+		return to_count(st);
 	}
 	METRIC("GetLocalTime()", tm_GetLocalTime);
-
-	count_t tm_GetLocalTimeFT()
-	{	SYSTEMTIME st;
-		::GetLocalTime(&st); // Retrieves the current local date and time.
-		FILETIME ft;
-		::SystemTimeToFileTime(&st, &ft);
-		return bit_cast(ft);
-	}
-	METRIC("GetLocalTime() FT", tm_GetLocalTimeFT);
 
 	count_t tm_timeGetSystemTime()
 	{	MMTIME mmt; // The function retrieves the system time, in milliseconds.
