@@ -28,14 +28,14 @@ namespace ch = std::chrono;
 using namespace std::literals;
 
 namespace
-{	constexpr auto operator""_ps(long double v) noexcept { return ch::duration<double, std::pico>(v); };
-	constexpr auto operator""_ps(unsigned long long v) noexcept { return ch::duration<double, std::pico>(v); };
-	constexpr auto operator""_ks(long double v) noexcept { return ch::duration<double, std::kilo>(v); };
-	constexpr auto operator""_ks(unsigned long long v) noexcept { return ch::duration<double, std::kilo>(v); };
-	constexpr auto operator""_Ms(long double v) noexcept { return ch::duration<double, std::mega>(v); };
-	constexpr auto operator""_Ms(unsigned long long v) noexcept { return ch::duration<double, std::mega>(v); };
-	constexpr auto operator""_Gs(long double v) noexcept { return ch::duration<double, std::giga>(v); };
-	constexpr auto operator""_Gs(unsigned long long v) noexcept { return ch::duration<double, std::giga>(v); };
+{	consteval auto operator""_ps(long double v) noexcept { return ch::duration<double, std::pico>(v); };
+	consteval auto operator""_ps(unsigned long long v) noexcept { return ch::duration<double, std::pico>(v); };
+	consteval auto operator""_ks(long double v) noexcept { return ch::duration<double, std::kilo>(v); };
+	consteval auto operator""_ks(unsigned long long v) noexcept { return ch::duration<double, std::kilo>(v); };
+	consteval auto operator""_Ms(long double v) noexcept { return ch::duration<double, std::mega>(v); };
+	consteval auto operator""_Ms(unsigned long long v) noexcept { return ch::duration<double, std::mega>(v); };
+	consteval auto operator""_Gs(long double v) noexcept { return ch::duration<double, std::giga>(v); };
+	consteval auto operator""_Gs(unsigned long long v) noexcept { return ch::duration<double, std::giga>(v); };
 }
 
 bool misc::operator < (misc::duration_t l, misc::duration_t r)
@@ -142,7 +142,7 @@ std::string misc::to_string(duration_t sec, unsigned char precision, unsigned ch
 	else if (1s > sec) { k = { "ms"sv, 1e3 }; }
 	else if (1_ks > sec) { k = { "s "sv, 1e0 }; }
 	else if (1_Ms > sec) { k = { "ks"sv, 1e-3 }; }
-	else if (1'000_Ms > sec) { k = { "Ms"sv, 1e-6 }; }
+	else if (1_Gs > sec) { k = { "Ms"sv, 1e-6 }; }
 	else { k = { "Gs"sv, 1e-9 }; }
 
 	std::ostringstream ss;

@@ -3,6 +3,8 @@
 
 #include "header.h"
 
+#include <bit>
+
 #ifndef _WIN32
 #	error "This functions for Windows only!"
 #endif
@@ -16,15 +18,11 @@
 
 namespace
 {
-	inline vi_mt::count_t to_count(FILETIME src) noexcept
-	{	static_assert(sizeof(vi_mt::count_t) == sizeof(FILETIME));
-
-		vi_mt::count_t result;
-		std::memcpy(&result, &src, sizeof(result));
-		return result;
+	inline auto to_count(FILETIME src) noexcept
+	{	return std::bit_cast<vi_mt::count_t>(src);
 	}
 
-	inline vi_mt::count_t to_count(const SYSTEMTIME& st) noexcept
+	inline vi_mt::count_t to_count(SYSTEMTIME st) noexcept
 	{	return st.wMilliseconds + 1'000UL * (st.wSecond + 60UL * (st.wMinute + 60UL * (st.wHour + 24UL * st.wDay)));
 	}
 }

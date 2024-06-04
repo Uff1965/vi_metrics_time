@@ -233,7 +233,7 @@ namespace
 			<< std::setw(7) << std::right << misc::duration_t{ ch::high_resolution_clock::duration{ 1 } } << ";\n";
 
 		std::cout
-			<< "\tThe number of clock vi_tmGetTicks per second \'CLOCKS_PER_SEC\': " << CLOCKS_PER_SEC
+			<< "\tThe number of clock ticks per second \'CLOCKS_PER_SEC\': " << CLOCKS_PER_SEC
 			<< " (what is equivalent to " << misc::to_string(misc::duration_t{ 1.0 / static_cast<double>(CLOCKS_PER_SEC) }, 3) << ")"
 			<< "\n";
 
@@ -284,7 +284,7 @@ namespace
 		}
 #elif defined __linux__
 		std::cout
-			<< "\tThe number of clock vi_tmGetTicks per second \'sysconf(_SC_CLK_TCK)\': " << sysconf(_SC_CLK_TCK)
+			<< "\tThe number of clock ticks per second \'sysconf(_SC_CLK_TCK)\': " << sysconf(_SC_CLK_TCK)
 			<< " (" << 1e3 / sysconf(_SC_CLK_TCK) << "ms);"
 			<< "\n";
 
