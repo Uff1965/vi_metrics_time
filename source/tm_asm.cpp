@@ -13,7 +13,9 @@
 
 #   if defined(_M_X64) || defined(_M_AMD64) // MS compiler for x64 or ARM64EC
 #       include <intrin.h>
-#       pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
+#       ifndef defined __clang__
+#           pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
+#       endif
 #   elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
 #       include <x86intrin.h>
 #       include <cpuid.h>

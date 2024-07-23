@@ -123,6 +123,42 @@ namespace vi_mt
 	}
 	METRIC("QueryUnbiasedInterruptTimePrecise()", tm_QueryUnbiasedInterruptTimePrecise);
 
+	count_t tm_GetSystemTimesI()
+	{	// Retrieves system timing information.
+		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
+		FILETIME t;
+		::GetSystemTimes(&t, nullptr, nullptr);
+		return to_count(t);
+	}
+	METRIC("GetSystemTimes() I", tm_GetSystemTimesI);
+
+	count_t tm_GetSystemTimesK()
+	{	// Retrieves system timing information.
+		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
+		FILETIME t;
+		::GetSystemTimes(nullptr, &t, nullptr);
+		return to_count(t);
+	}
+	METRIC("GetSystemTimes() K", tm_GetSystemTimesK);
+
+	count_t tm_GetSystemTimesU()
+	{	// Retrieves system timing information.
+		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
+		FILETIME t;
+		::GetSystemTimes(nullptr, nullptr, &t);
+		return to_count(t);
+	}
+	METRIC("GetSystemTimes() U", tm_GetSystemTimesU);
+
+	count_t tm_GetSystemTimesIKU()
+	{	// Retrieves system timing information.
+		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.
+		FILETIME it, kt, ut;
+		::GetSystemTimes(&it, &kt, &ut);
+		return to_count(it) + to_count(kt) + to_count(ut);
+	}
+	METRIC("GetSystemTimes() I+K+U", tm_GetSystemTimesIKU);
+
 	count_t tm_GetSystemTimesKU()
 	{	// Retrieves system timing information.
 		// On a multiprocessor system, the values returned are the sum of the designated times across all processors.

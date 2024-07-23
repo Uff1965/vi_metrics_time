@@ -1,4 +1,4 @@
-; "Àññåìáëåð â Linux äëÿ ïðîãðàììèñòîâ C" https://ru.wikibooks.org/wiki/%D0%90%D1%81%D1%81%D0%B5%D0%BC%D0%B1%D0%BB%D0%B5%D1%80_%D0%B2_Linux_%D0%B4%D0%BB%D1%8F_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%81%D1%82%D0%BE%D0%B2_C
+; "Linux Assembler for C Programmers" https://ru.wikibooks.org/wiki/%D0%90%D1%81%D1%81%D0%B5%D0%BC%D0%B1%D0%BB%D0%B5%D1%80_%D0%B2_Linux_%D0%B4%D0%BB%D1%8F_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%81%D1%82%D0%BE%D0%B2_C
 
 option casemap:none ; The 'option casemap:none' directive tells MASM to make all symbols case-sensitive.
 
@@ -10,15 +10,15 @@ option casemap:none ; The 'option casemap:none' directive tells MASM to make all
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Clear functions:
-;Intel® 64 and IA-32 Architectures Software Developer’s Manual. Vol. 2B 4-551
-;RDTSC—Read Time-Stamp Counter:
+;Intel(R) 64 and IA-32 Architectures Software Developer's Manual. Vol. 2B 4-551
+;RDTSC-Read Time-Stamp Counter:
 ;The RDTSC instruction is not a serializing instruction. It does not necessarily wait until all previous instructions have been executed before reading the counter. Similarly, subsequent instructions may begin execution before the read operation is performed. The following items may guide software seeking to order executions of RDTSC:
 ;	*If software requires RDTSC to be executed only after all previous instructions have executed and all previous loads are globally visible,1 it can execute LFENCE immediately before RDTSC.
 ;	*If software requires RDTSC to be executed only after all previous instructions have executed and all previous loads and stores are globally visible, it can execute the sequence MFENCE;LFENCE immediately before RDTSC.
 ;	*If software requires RDTSC to be executed prior to execution of any subsequent instruction (including any memory accesses), it can execute the sequence LFENCE immediately after RDTSC.
 
-;Intel® 64 and IA-32 Architectures Software Developer’s Manual. Vol. 2B 4-553
-;RDTSCP—Read Time-Stamp Counter and Processor ID:
+;Intel(R) 64 and IA-32 Architectures Software Developer's Manual. Vol. 2B 4-553
+;RDTSCP-Read Time-Stamp Counter and Processor ID:
 ;"The RDTSCP instruction is not a serializing instruction, but it does wait until all previous instructions have executed and all previous loads are globally visible. But it does not wait for previous stores to be globally visible, and subse-quent instructions may begin execution before the read operation is performed. The following items may guide software seeking to order executions of RDTSCP:
 ;	*If software requires RDTSCP to be executed only after all previous stores are globally visible, it can execute MFENCE immediately before RDTSCP.
 ;	*If software requires RDTSCP to be executed prior to execution of any subsequent instruction (including any memory accesses), it can execute LFENCE immediately after RDTSCP"
@@ -42,8 +42,8 @@ vi_rdtscp_asm ENDP
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Functions using CPUID:
-;Intel® 64 and IA-32 Architectures Software Developer’s Manual. Vol. 3A 9-18:
-;"Non-privileged serializing instructions — CPUID, IRET, RSM, and SERIALIZE
+;Intel(R) 64 and IA-32 Architectures Software Developer's Manual. Vol. 3A 9-18:
+;"Non-privileged serializing instructions - CPUID, IRET, RSM, and SERIALIZE
 ;When the processor serializes instruction execution, it ensures that all pending memory transactions are completed 
 ;(including writes stored in its store buffer) before it executes the next instruction. Nothing can pass a serializing 
 ;instruction and a serializing instruction cannot pass any other instruction (read, write, instruction fetch, or I/O). 
@@ -86,8 +86,8 @@ vi_rdtscp_cpuid_asm ENDP
 
 ;vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ; Functions using FENCE:
-;Intel® 64 and IA-32 Architectures Software Developer’s Manual. Vol. 2A 3-603
-;LFENCE—Load Fence:
+;Intel(R) 64 and IA-32 Architectures Software Developer's Manual. Vol. 2A 3-603
+;LFENCE-Load Fence:
 ;"Performs a serializing operation on all load-from-memory instructions that were issued prior the LFENCE instruction.
 ;Specifically, LFENCE does not execute until all prior instructions have completed locally, and no later instruction
 ;begins execution until LFENCE completes. In particular, an instruction that loads from memory and that
