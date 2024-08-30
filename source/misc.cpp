@@ -122,9 +122,8 @@ const auto unit_test_round = []
 	};
 
 	for (auto& i : samples)
-	{
-		const auto rnd = misc::round(i.org_, i.precision_, i.dec_);
-		assert(std::max(rnd, i.rnd_) * DBL_EPSILON >= std::abs(rnd - i.rnd_));
+	{	const auto rnd = misc::round(i.org_, i.precision_, i.dec_);
+		assert(std::max(rnd, i.rnd_) * std::numeric_limits<double>::epsilon() >= std::abs(rnd - i.rnd_));
 	}
 
 	return 0;
