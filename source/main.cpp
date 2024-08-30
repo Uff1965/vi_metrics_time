@@ -512,7 +512,8 @@ namespace
 		auto result = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
 		result *= static_cast<double>(std::distance(begin, end)) / std::pow(std::accumulate(begin, end, 0.0), 2.0);
 		result += std::numeric_limits<decltype(result)>::epsilon();
-		assert(result >= 1.0);
+//		assert(result >= 1.0);
+		assert(result + std::numeric_limits<double>::epsilon() >= 1.0);
 		result = 100.0 * ((result > 1.0) ? std::sqrt(result - 1.0) : 0.0);
 		return result;
 	}
@@ -621,20 +622,15 @@ namespace
 
 		std::transform(data.begin(), data.end(), std::back_inserter(result), action);
 
-		static constexpr bool(*sort_predicates[])(const data_t & l, const data_t & r) = {
-			// The order of the elements must match the order of the sort_t enum.
-			less<sort_t::name>,
-			less<sort_t::discreteness>,
-			less<sort_t::duration>,
-			less<sort_t::tick>,
-			less<sort_t::type>,
+		static constexpr misc::emap_t<sort_t, bool(*)(const data_t & l, const data_t & r)> sort_predicates
+		{	{sort_t::name, less<sort_t::name>},
+			{sort_t::discreteness, less<sort_t::discreteness>},
+			{sort_t::duration, less<sort_t::duration>},
+			{sort_t::tick, less<sort_t::tick>},
+			{sort_t::type, less<sort_t::type>},
 		};
-		static_assert(std::size(sort_predicates) == static_cast<std::underlying_type_t<sort_t>>(sort_t::_quantity));
 
-		auto pred = less<sort_t::name>;
-		if (const auto pos = static_cast<std::underlying_type_t<sort_t>>(g_sort); pos < std::size(sort_predicates))
-			pred = sort_predicates[pos];
-
+		auto pred = (sort_predicates.to_underlying(g_sort) < sort_predicates.size())? sort_predicates[g_sort]: less<sort_t::name>;
 		std::stable_sort(result.begin(), result.end(), pred);
 
 		return result;

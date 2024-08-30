@@ -2,6 +2,8 @@
 #	define VI_METRICS_TIME_SOURCE_MISC_H_
 #	pragma once
 
+#	include <algorithm>
+#	include <array>
 #	include <cassert>
 #	include <chrono>
 #	include <iosfwd>
@@ -41,6 +43,52 @@ namespace misc
 		~progress_t() { print(std::numeric_limits<double>::quiet_NaN()); }
 		void operator()(double f) const { assert(.0 <= f); print(f); }
 	};
+
+	template<typename Key, typename T>
+	class emap_t
+	{
+	public:
+		using key_type = Key;
+		using mapped_type = T;
+		using value_type = T;
+		using size_type = std::size_t;
+		using reference = T&;
+		using const_reference = const T&;
+
+#	ifdef __cpp_lib_to_underlying // C++23?
+		constexpr static auto to_underlying(key_type e) noexcept { return std::to_underlying<key_type>(e); }
+#	else
+		constexpr static auto to_underlying(key_type e) noexcept { return static_cast<std::underlying_type_t<key_type>>(e); }
+#	endif
+
+		constexpr emap_t(std::initializer_list<std::pair<key_type, mapped_type>> values)
+		{	assert(values.size() == N);
+			for (auto &&p : values)
+			{	assert(to_underlying(p.first) >= 0 && to_underlying(p.first) < N);
+				data_[to_underlying(p.first)] = p.second;
+			}
+		}
+		constexpr emap_t(std::initializer_list<mapped_type> values)
+		{	assert(values.size() == N);
+			std::copy(values.begin(), values.end(), data_.begin());
+		}
+		[[nodiscard]] constexpr static size_type size() noexcept { return N; }
+		[[nodiscard]] constexpr reference operator[](key_type key) { return data_[to_underlying(key)]; }
+		[[nodiscard]] constexpr const_reference operator[](key_type key) const { return data_[to_underlying(key)]; }
+		[[nodiscard]] reference at(key_type key) { return data_.at(to_underlying(key)); }
+		[[nodiscard]] const_reference at(key_type key) const { return data_.at(to_underlying(key)); }
+
+	private:
+		constexpr static size_type N = to_underlying(key_type::_quantity);
+		std::array<mapped_type, N> data_;
+	};
+
+	template<typename Key, typename... Args>
+	constexpr auto make_emap( Args&&... args)
+	{	using T = std::common_type_t<Args...>;
+		return emap_t<Key, T>{ std::initializer_list<T>{args ...} };
+	}
+
 } // namespace misc
 
 #	ifdef _MSC_VER
