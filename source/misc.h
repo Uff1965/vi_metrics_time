@@ -70,23 +70,33 @@ namespace misc
 		}
 		constexpr emap_t(std::initializer_list<mapped_type> values)
 		{	assert(values.size() == N);
-			std::copy(values.begin(), values.end(), data_.begin());
+			std::copy(std::begin(values), std::end(values), std::begin(data_));
 		}
 		[[nodiscard]] constexpr static size_type size() noexcept { return N; }
 		[[nodiscard]] constexpr reference operator[](key_type key) { return data_[to_underlying(key)]; }
 		[[nodiscard]] constexpr const_reference operator[](key_type key) const { return data_[to_underlying(key)]; }
-		[[nodiscard]] reference at(key_type key) { return data_.at(to_underlying(key)); }
-		[[nodiscard]] const_reference at(key_type key) const { return data_.at(to_underlying(key)); }
+		[[nodiscard]] constexpr reference at(key_type key)
+		{	if(const auto n = to_underlying(key); index_check(n))
+				return data_[n];
+			throw std::out_of_range("invalid emap_t<K, T> key");
+		}
+		[[nodiscard]] constexpr const_reference at(key_type key) const
+		{	if(const auto n = to_underlying(key); index_check(n))
+				return data_[n];
+			throw std::out_of_range("invalid emap_t<K, T> key");
+		}
 
 	private:
 		constexpr static size_type N = to_underlying(key_type::_quantity);
-		std::array<mapped_type, N> data_;
-	};
+		constexpr static bool index_check(size_type index) noexcept { return index >= 0 && index < N; }
+		mapped_type data_[N];
+
+	}; // class emap_t
 
 	template<typename Key, typename... Args>
 	constexpr auto make_emap( Args&&... args)
 	{	using T = std::common_type_t<Args...>;
-		return emap_t<Key, T>{ std::initializer_list<T>{args ...} };
+		return emap_t<Key, T>{ std::initializer_list<T>{std::forward<Args>(args)...} };
 	}
 
 } // namespace misc
