@@ -94,7 +94,7 @@ namespace misc
 	}; // class emap_t
 
 	template<typename Key, typename... Args>
-	constexpr auto make_emap( Args&&... args)
+	[[nodiscard]] constexpr auto make_emap( Args&&... args)
 	{	using T = std::common_type_t<Args...>;
 		return emap_t<Key, T>{ std::initializer_list<T>{std::forward<Args>(args)...} };
 	}

@@ -14,6 +14,15 @@
 #include <sys/times.h> // for times
 #include <sys/resource.h> // for getrusage
 
+#if __ARM_ARCH >= 6 // ARMv6 (RaspberryPi1B+)
+// vvv For tm_getrusage_RUSAGE_THREAD vvv
+#	include <time.h> // for clock_gettime
+#	include <fcntl.h>
+#	include <sys/mman.h>
+#	include <unistd.h>
+// ^^^ For tm_getrusage_RUSAGE_THREAD ^^^
+#endif
+
 #define METRIC(title, ...) TM_METRIC(("<LNX>::" title), __VA_ARGS__)
 
 namespace vi_mt
@@ -133,5 +142,39 @@ namespace vi_mt
 		return 1'000'000ULL * (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec) + ru.ru_utime.tv_usec + ru.ru_stime.tv_usec;
 	}
 	METRIC("getrusage(RUSAGE_THREAD)", tm_getrusage_RUSAGE_THREAD);
+
+#if __ARM_ARCH >= 6 // ARMv6 (RaspberryPi1B+)
+	volatile std::uint32_t *timer_base = []
+		{	volatile std::uint32_t *result = nullptr;
+			if (int mem_fd = open("/dev/mem", O_RDONLY | O_SYNC); mem_fd >= 0)
+			{	// Timer addresses in Raspberry Pi peripheral area
+				constexpr off_t TIMER_BASE = 0x20003000;
+				constexpr std::size_t BLOCK_SIZE = 4096;
+				if (void *mapped_base = mmap(nullptr, BLOCK_SIZE, PROT_READ, MAP_SHARED, mem_fd, TIMER_BASE); mapped_base != MAP_FAILED)
+				{	result = reinterpret_cast<volatile std::uint32_t *>(mapped_base);
+				}
+				else
+				{	assert(false);
+				}
+				close(mem_fd);
+			}
+			else
+			{	assert(false); // Enhanced privileges are required (sudo).
+			}
+
+			return result;
+		}();
+
+	count_t tm_getrusage_RUSAGE_THREAD()
+	{	count_t result = 0;
+		if (timer_base)
+		{	const std::uint32_t lo = timer_base[1]; // Timer low 32 bits
+			const std::uint32_t hi = timer_base[2]; // Timer high 32 bits
+			result = ((std::uint64_t)hi << 32) | lo;
+		}
+		return result;
+	}
+	METRIC("SystemTimer_by_DevMem", tm_getrusage_RUSAGE_THREAD);
+#endif
 
 } // namespace vi_mt
