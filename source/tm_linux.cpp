@@ -165,7 +165,7 @@ namespace vi_mt
 			return result;
 		}();
 
-	count_t tm_getrusage_RUSAGE_THREAD()
+	count_t tm_SystemTimer_by_DevMem()
 	{	count_t result = 0;
 		if (timer_base)
 		{	const std::uint32_t lo = timer_base[1]; // Timer low 32 bits
@@ -174,7 +174,7 @@ namespace vi_mt
 		}
 		return result;
 	}
-	METRIC("SystemTimer_by_DevMem", tm_getrusage_RUSAGE_THREAD);
+	METRIC("SystemTimer_by_DevMem", tm_SystemTimer_by_DevMem);
 #endif
 
 } // namespace vi_mt
