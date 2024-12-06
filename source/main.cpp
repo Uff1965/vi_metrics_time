@@ -76,7 +76,7 @@ namespace
 
 		if ("name"sv == ptr)
 			result = sort_t::name;
-		else if ("discreteness"sv == ptr)
+		else if ("resolution"sv == ptr)
 			result = sort_t::discreteness;
 		else if ("duration"sv == ptr)
 			result = sort_t::duration;
@@ -173,12 +173,12 @@ namespace
 				std::cout << "Options:\n" <<
 					"-[-h]elp: this help;\n"
 					"-[-w]arming 1|0: by default - 1s; implicit - OFF;\n"
-					"-[-s]sort name|discreteness|duration|tick|type: by default - name; implicit - discreteness;\n"
+					"-[-s]sort name|resolution|duration|tick|type: by default - name; implicit - resolution;\n"
 					"-[-i]nclude <name>: include function name;\n"
 					"-[-e]xclude <name>: exclude function name;\n"
 					"-[-r]epeat <N>: number of measurements. by default - 1; implicit - 5;\n"
 					"--stat average|minimum|median: by default - median; implicit - minimum;\n"
-					"--version: type and time compyle program;\n";
+					"--version: type and time of program compilation;\n";
 
 				std::exit(error ? EXIT_FAILURE : EXIT_SUCCESS);
 			}
@@ -400,7 +400,7 @@ namespace
 
 	std::ostream& operator<<(std::ostream& out, const std::vector<data_t>& data)
 	{
-		print_itm(out, { "Name", "Discreteness:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-" }) << "\n";
+		print_itm(out, { "Name", "Resolution:", "Duration:", "One tick:", "Type:", "+/-", "+/-", "+/-" }) << "\n";
 		{
 			str_out sort_line = { "", "", "", "", "" };
 			static constexpr char marker[] = " ";
