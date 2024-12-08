@@ -149,7 +149,7 @@ namespace vi_mt
 
 			if (auto fp = open("/proc/device-tree/soc/ranges", O_RDONLY); fp >= 0)
 			{	std::uint8_t buf[32];
-				if (auto sz = read(азб buf, sizeof(buf)); sz >= 32) // Raspberry Pi 4
+				if (auto sz = read(fp, buf, sizeof(buf)); sz >= 32) // Raspberry Pi 4
 				{	result = (buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
 					assert(result == 0xFE000000);
 				}
