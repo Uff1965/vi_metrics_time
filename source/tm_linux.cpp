@@ -142,72 +142,69 @@ namespace vi_mt
 	METRIC("getrusage(RUSAGE_THREAD)", tm_getrusage_RUSAGE_THREAD);
 
 #if __ARM_ARCH >= 6 // ARMv6 (RaspberryPi1B+)
-	namespace SystemTimer_by_DevMem
-	{
-		auto get_peripheral_base()
-		{	std::uint32_t result = 0;
+	auto get_peripheral_base()
+	{	std::uint32_t result = 0;
 
-			if (auto fp = open("/proc/device-tree/soc/ranges", O_RDONLY); fp >= 0)
-			{	std::uint8_t buf[32];
-				if (auto sz = read(fp, buf, sizeof(buf)); sz >= 32) // Raspberry Pi 4
-				{	result = (buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
-					assert(result == 0xFE000000);
-				}
-				else if (sz >= 12) // Raspberry Pi 1 - 3
-				{	result = (buf[4] << 24) | (buf[5] << 16) | (buf[6] << 8) | buf[7];
-					assert(result == 0x20000000 || result == 0x3F000000);
-				}
-				else
-				{	printf("SystemTimer_by_DevMem initial filed: Unknown format file \'/proc/device-tree/soc/ranges\'\n");
-				}
-
-				close(fp);
+		if (auto fp = open("/proc/device-tree/soc/ranges", O_RDONLY); fp >= 0)
+		{	std::uint8_t buf[32];
+			if (auto sz = read(fp, buf, sizeof(buf)); sz >= 32) // Raspberry Pi 4
+			{	result = (buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
+				assert(result == 0xFE000000);
+			}
+			else if (sz >= 12) // Raspberry Pi 1 - 3
+			{	result = (buf[4] << 24) | (buf[5] << 16) | (buf[6] << 8) | buf[7];
+				assert(result == 0x20000000 || result == 0x3F000000);
 			}
 			else
-			{	perror("SystemTimer_by_DevMem initial filed");
+			{	printf("SystemTimer_by_DevMem initial filed: Unknown format file \'/proc/device-tree/soc/ranges\'\n");
 			}
 
-			return result;
+			close(fp);
+		}
+		else
+		{	perror("SystemTimer_by_DevMem initial filed");
 		}
 
-		volatile std::uint32_t *timer_base = []
-			{	volatile std::uint32_t *result = nullptr;
+		return result;
+	}
 
-				if (auto mem_fd = open("/dev/mem", O_RDONLY); mem_fd >= 0)
-				{	// Timer addresses in Raspberry Pi peripheral area
-					const auto PAGE_SIZE = sysconf(_SC_PAGE_SIZE);
-					constexpr auto TIMER_OFFSET = 0x3000;
-					const off_t TIMER_BASE = get_peripheral_base() + TIMER_OFFSET;
+	volatile std::uint32_t *timer_base = []
+		{	volatile std::uint32_t *result = nullptr;
+
+			if (auto mem_fd = open("/dev/mem", O_RDONLY); mem_fd >= 0)
+			{	// Timer addresses in Raspberry Pi peripheral area
+				const auto PAGE_SIZE = sysconf(_SC_PAGE_SIZE);
+				constexpr auto TIMER_OFFSET = 0x3000;
+				const off_t TIMER_BASE = get_peripheral_base() + TIMER_OFFSET;
 ;
-					if (void *mapped_base = mmap(nullptr, PAGE_SIZE, PROT_READ, MAP_SHARED, mem_fd, TIMER_BASE); mapped_base != MAP_FAILED)
-					{	result = reinterpret_cast<volatile std::uint32_t *>(mapped_base);
-					}
-					else
-					{	assert(false);
-						perror("SystemTimer_by_DevMem initial filed");
-					}
-					close(mem_fd);
+				if (void *mapped_base = mmap(nullptr, PAGE_SIZE, PROT_READ, MAP_SHARED, mem_fd, TIMER_BASE); mapped_base != MAP_FAILED)
+				{	result = reinterpret_cast<volatile std::uint32_t *>(mapped_base);
 				}
 				else
-				{	assert(false); // May be enhanced privileges are required (sudo).
+				{	assert(false);
 					perror("SystemTimer_by_DevMem initial filed");
 				}
-
-				return result;
-			}();
-
-		count_t tm_SystemTimer_by_DevMem()
-		{	count_t result = 0;
-
-			if (timer_base)
-			{	const std::uint64_t lo = timer_base[1]; // Timer low 32 bits
-				const std::uint64_t hi = timer_base[2]; // Timer high 32 bits
-				result = (hi << 32) | lo;
+				close(mem_fd);
 			}
+			else
+			{	assert(false); // May be enhanced privileges are required (sudo).
+				perror("SystemTimer_by_DevMem initial filed");
+			}
+
 			return result;
+		}();
+
+	count_t tm_SystemTimer_by_DevMem()
+	{	count_t result = 0;
+
+		if (timer_base)
+		{	const std::uint64_t lo = timer_base[1]; // Timer low 32 bits
+			const std::uint64_t hi = timer_base[2]; // Timer high 32 bits
+			result = (hi << 32) | lo;
 		}
-		METRIC("SystemTimer_by_DevMem", tm_SystemTimer_by_DevMem);
+		return result;
 	}
+	METRIC("SystemTimer_by_DevMem", tm_SystemTimer_by_DevMem);
 #endif
 
 } // namespace vi_mt
