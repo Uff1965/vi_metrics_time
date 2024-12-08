@@ -176,7 +176,7 @@ namespace vi_mt
 				if (auto mem_fd = open("/dev/mem", O_RDONLY); mem_fd >= 0)
 				{	// Timer addresses in Raspberry Pi peripheral area
 					const auto PAGE_SIZE = sysconf(_SC_PAGE_SIZE);
-					constexpr TIMER_OFFSET = 0x3000;
+					constexpr auto TIMER_OFFSET = 0x3000;
 					const off_t TIMER_BASE = get_peripheral_base() + TIMER_OFFSET;
 ;
 					if (void *mapped_base = mmap(nullptr, PAGE_SIZE, PROT_READ, MAP_SHARED, mem_fd, TIMER_BASE); mapped_base != MAP_FAILED)
