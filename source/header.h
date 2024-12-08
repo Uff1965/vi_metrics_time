@@ -213,7 +213,7 @@ namespace vi_mt
 		item_t result;
 
 		const bool ok = []
-			{	const auto tick_s = vi_tmGetTicks()
+			{	const auto tick_s = vi_tmGetTicks();
 				auto tick = tick_s;
 				for (const auto t = ch::steady_clock::now() + 2s; ch::steady_clock::now() < t && tick <= tick_s; tick = vi_tmGetTicks())
 				{
