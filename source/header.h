@@ -23,6 +23,7 @@
 namespace vi_mt
 {
 	namespace ch = std::chrono;
+	using namespace std::chrono_literals;
 	using count_t = std::uint64_t;
 
 	[[nodiscard]] inline auto now() { return ch::high_resolution_clock::now(); }
@@ -83,7 +84,7 @@ namespace vi_mt
 		tick_t last, first;
 		for (;; CNT *= 8)
 		{	std::this_thread::yield(); // Reduce the likelihood of interrupting measurements by switching threads.
-			const auto limit = now() + ch::microseconds{ 128 };
+			const auto limit = now() + 128us;
 			for (auto n = 0U; n < cache_warmup; ++n)
 			{	last = first = vi_tmGetTicks();
 			}
@@ -124,11 +125,11 @@ namespace vi_mt
 		tick_t tick_e;
 		auto time_e = time_b;
 		do
-		{	burden(time_e + ch::milliseconds{ 512 });
+		{	burden(time_e + 512ms);
 			std::tie(tick_e, time_e) = get_pair();
-		} while (tick_e - tick_b < 5); // For functions with resolution worse than 512ms. For example, for the function time()..
+		} while (tick_e - tick_b < 5 && time_e - time_b < 2s); // For functions with resolution worse than 512ms. For example, for the function time()..
 
-		return misc::duration_t{ time_e - time_b } / (tick_e - tick_b);
+		return (tick_e > tick_b) ? misc::duration_t{ time_e - time_b } / (tick_e - tick_b) : misc::duration_t{};
 	}
 
 	template<const char* Name, auto Func, auto... Args>
@@ -214,13 +215,16 @@ namespace vi_mt
 		item_t result;
 		result.unit_of_currrentthread_work_ = measurement_unit_one_thread_work(); // The first, because it can warming the processor.
 		progress(1.0 / 5.);
-		result.discreteness_ = measurement_discreteness();
-		progress(2.0 / 5.);
-		result.call_duration_ = measurement_call_duration();
-		progress(3.0 / 5.);
-		result.unit_of_allthreads_work_ = measurement_unit_all_threads_work();
-		progress(4.0 / 5.);
-		result.unit_of_sleeping_process_ = measurement_unit_process_sleep(); // The latter, because it can reduce the processor frequency.
+		if (result.unit_of_currrentthread_work_ != misc::duration_t::zero())
+		{
+			result.discreteness_ = measurement_discreteness();
+			progress(2.0 / 5.);
+			result.call_duration_ = measurement_call_duration();
+			progress(3.0 / 5.);
+			result.unit_of_allthreads_work_ = measurement_unit_all_threads_work();
+			progress(4.0 / 5.);
+			result.unit_of_sleeping_process_ = measurement_unit_process_sleep(); // The latter, because it can reduce the processor frequency.
+		}
 		progress(5.0 / 5.);
 		return result;
 	}
