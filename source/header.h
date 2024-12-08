@@ -31,11 +31,11 @@ namespace vi_mt
 
 	struct item_t
 	{
-		misc::duration_t call_duration_; // Duration of the Function call.
+		misc::duration_t call_duration_{}; // Duration of the Function call.
 		double discreteness_{}; // Average tick growth.
-		misc::duration_t unit_of_sleeping_process_; // Duration of one tick in a sleeping process.
-		misc::duration_t unit_of_currrentthread_work_; // Duration of one tick when loading current thread.
-		misc::duration_t unit_of_allthreads_work_; // Duration of one tick when loading multiple threads.
+		misc::duration_t unit_of_sleeping_process_{}; // Duration of one tick in a sleeping process.
+		misc::duration_t unit_of_currrentthread_work_{}; // Duration of one tick when loading current thread.
+		misc::duration_t unit_of_allthreads_work_{}; // Duration of one tick when loading multiple threads.
 	};
 
 	using raw_t = std::map<std::string, vi_mt::item_t, std::less<>>;
