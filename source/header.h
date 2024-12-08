@@ -218,21 +218,23 @@ namespace vi_mt
 				for (const auto t = ch::steady_clock::now() + 2s; ch::steady_clock::now() < t && tick <= tick_s; tick = vi_tmGetTicks())
 				{
 				}
-				return tick >= tick_s;
+				return tick > tick_s;
 			}();
+		progress(1.0 / 6.);
 
 		if (ok)
 		{	result.unit_of_currrentthread_work_ = measurement_unit_one_thread_work(); // The first, because it can warming the processor.
-			progress(1.0 / 5.);
+			progress(2.0 / 6.);
 			result.discreteness_ = measurement_discreteness();
-			progress(2.0 / 5.);
+			progress(3.0 / 6.);
 			result.call_duration_ = measurement_call_duration();
-			progress(3.0 / 5.);
+			progress(4.0 / 6.);
 			result.unit_of_allthreads_work_ = measurement_unit_all_threads_work();
-			progress(4.0 / 5.);
+			progress(5.0 / 6.);
 			result.unit_of_sleeping_process_ = measurement_unit_process_sleep(); // The latter, because it can reduce the processor frequency.
-			progress(5.0 / 5.);
 		}
+		progress(6.0 / 6.);
+
 		return result;
 	}
 } // namespace vi_mt

@@ -440,9 +440,9 @@ namespace
 
 			str_out s =
 			{	m.name_,
-				to_string(discreteness(m), 3),
-				to_string(misc::duration_t{ m.call_duration_ }, 2),
-				to_string(tick(m), 2),
+				(m.discreteness_ != .0? to_string(discreteness(m), 3): "n/a"),
+				(m.call_duration_ != .0? to_string(misc::duration_t{ m.call_duration_ }, 2): "n/a"),
+				(m.unit_ != .0? to_string(tick(m), 2): "n/a"),
 				m.type_,
 				prn_sd(m.discreteness_prec_),
 				prn_sd(m.duration_prec_),
@@ -509,12 +509,14 @@ namespace
 	template<typename I>
 	double percentage_standard_deviation(I begin, I end)
 	{
-		auto result = std::accumulate(begin, end, 0.0, [](auto i, auto v) {return i + std::pow(v, 2.0); });
-		result *= static_cast<double>(std::distance(begin, end)) / std::pow(std::accumulate(begin, end, 0.0), 2.0);
-		result += std::numeric_limits<decltype(result)>::epsilon();
-//		assert(result >= 1.0);
-		assert(result + std::numeric_limits<double>::epsilon() >= 1.0);
-		result = 100.0 * ((result > 1.0) ? std::sqrt(result - 1.0) : 0.0);
+		auto result = 0.0;
+		if (auto sum = std::accumulate(begin, end, 0.0))
+		{	result = std::accumulate(begin, end, 0.0, [](auto i, auto v) { return i + std::pow(v, 2.0); });
+			result *= static_cast<double>(std::distance(begin, end)) / std::pow(sum, 2.0);
+			result += std::numeric_limits<decltype(result)>::epsilon();
+			assert(result >= 1.0);
+			result = 100.0 * ((result > 1.0) ? std::sqrt(result - 1.0) : 0.0);
+		}
 		return result;
 	}
 
