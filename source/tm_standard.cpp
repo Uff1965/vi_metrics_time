@@ -35,7 +35,7 @@ namespace vi_mt
 	}
 	METRIC_CPP("high_resolution_clock::now()", tm_high_resolution_clock);
 
-#ifndef NDEBUG_
+#ifndef NDEBUG
 	count_t tm_test_failed()
 	{	return 777U;
 	}
