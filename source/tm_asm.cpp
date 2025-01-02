@@ -114,16 +114,22 @@ namespace vi_mt
 // vvv With Data Synchronization Barrier
     inline count_t tm_dsb_mrs()
     {   count_t result;
-        asm volatile("DSB SY" ::: "memory");
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm volatile
+        (   "DSB SY\n\t"
+            "mrs %0, cntvct_el0"
+            : "=r"(result)
+        );
         return result;
     }
     METRIC("DSB MRS", tm_dsb_mrs);
 
     inline count_t tm_mrs_dsb()
     {   count_t result;
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
-        asm volatile("DSB SY" ::: "memory");
+        asm volatile
+        (   "mrs %0, cntvct_el0\n\t"
+            "DSB SY"
+            : "=r"(result)
+        );
         return result;
     }
     METRIC("MRS DSB", tm_mrs_dsb);
@@ -133,7 +139,8 @@ namespace vi_mt
         asm volatile
         (   "DSB SY\n\t"
             "mrs %0, cntvct_el0\n\t"
-            "DSB SY" : "=r"(result)
+            "DSB SY"
+            : "=r"(result)
         );
         return result;
     }
@@ -143,16 +150,22 @@ namespace vi_mt
 // vvv With Instruction Synchronization Barrier
     inline count_t tm_isb_mrs()
     {   count_t result;
-        asm volatile("ISB SY" ::: "memory");
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm volatile
+        (   "ISB SY\n\t"
+            "mrs %0, cntvct_el0"
+            : "=r"(result)
+        );
         return result;
     }
     METRIC("ISB MRS", tm_isb_mrs);
 
     inline count_t tm_mrs_isb()
     {   count_t result;
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
-        asm volatile("ISB SY" ::: "memory");
+        asm volatile
+        (   "mrs %0, cntvct_el0\n\t"
+            "ISB SY"
+            : "=r"(result)
+        );
         return result;
     }
     METRIC("MRS ISB", tm_mrs_isb);
