@@ -120,7 +120,7 @@ namespace vi_mt
     }
     METRIC("DSB MRS DSB", tm_dsb_mrs_dsb);
 
-    inline count_t tm_mrs()
+    inline count_t tm_mrs_dsb()
     {   count_t result;
         asm volatile("DSB" ::: "memory");
         asm volatile("mrs %0, cntvct_el0" : "=r"(result));
