@@ -117,15 +117,15 @@ namespace vi_mt
         asm volatile("mrs %0, cntvct_el0" : "=r"(result));
         return result;
     }
-    METRIC("DSB MRS DSB", tm_dsb_mrs);
+    METRIC("DSB MRS", tm_dsb_mrs);
 
     inline count_t tm_mrs_dsb()
     {   count_t result;
-        asm volatile("DSB SY" ::: "memory");
         asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm volatile("DSB SY" ::: "memory");
         return result;
     }
-    METRIC("DSB MRS", tm_mrs_dsb);
+    METRIC("MRS DSB", tm_mrs_dsb);
 
     inline count_t tm_dsb_mrs_dsb()
     {   count_t result;
