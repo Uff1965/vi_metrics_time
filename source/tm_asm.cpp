@@ -135,6 +135,32 @@ namespace vi_mt
         return result;
     }
     METRIC("DSB MRS DSB", tm_dsb_mrs_dsb);
+
+
+    inline count_t tm_isb_mrs()
+    {   count_t result;
+        asm volatile("ISB SY" ::: "memory");
+        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        return result;
+    }
+    METRIC("ISB MRS", tm_isb_mrs);
+
+    inline count_t tm_mrs_isb()
+    {   count_t result;
+        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm volatile("ISB SY" ::: "memory");
+        return result;
+    }
+    METRIC("MRS ISB", tm_mrs_isb);
+
+    inline count_t tm_isb_mrs_isb()
+    {   count_t result;
+        asm volatile("ISB SY" ::: "memory");
+        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm volatile("ISB SY" ::: "memory");
+        return result;
+    }
+    METRIC("ISB MRS ISB", tm_isb_mrs_isb);
 }
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
