@@ -111,6 +111,7 @@ namespace vi_mt
     }
     METRIC("MRS", tm_mrs);
 
+// vvv With Data Synchronization Barrier
     inline count_t tm_dsb_mrs()
     {   count_t result;
         asm volatile("DSB SY" ::: "memory");
@@ -135,8 +136,9 @@ namespace vi_mt
         return result;
     }
     METRIC("DSB MRS DSB", tm_dsb_mrs_dsb);
+// ^^^ With Data Synchronization Barrier
 
-
+// vvv With Instruction Synchronization Barrier
     inline count_t tm_isb_mrs()
     {   count_t result;
         asm volatile("ISB SY" ::: "memory");
@@ -161,6 +163,7 @@ namespace vi_mt
         return result;
     }
     METRIC("ISB MRS ISB", tm_isb_mrs_isb);
+// ^^^ With Instruction Synchronization Barrier
 }
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
