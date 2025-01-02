@@ -110,6 +110,23 @@ namespace vi_mt
         return result;
     }
     METRIC("MRS", tm_mrs);
+
+    inline count_t tm_mrs()
+    {   count_t result;
+        asm volatile("DSB" ::: "memory");
+        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        asm volatile("DSB" ::: "memory");
+        return result;
+    }
+    METRIC("DSB MRS DSB", tm_mrs);
+
+    inline count_t tm_mrs()
+    {   count_t result;
+        asm volatile("DSB" ::: "memory");
+        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
+        return result;
+    }
+    METRIC("DSB MRS", tm_mrs);
 }
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
