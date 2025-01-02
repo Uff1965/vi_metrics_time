@@ -130,9 +130,11 @@ namespace vi_mt
 
     inline count_t tm_dsb_mrs_dsb()
     {   count_t result;
-        asm volatile("DSB SY" ::: "memory");
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
-        asm volatile("DSB SY" ::: "memory");
+        asm volatile
+        (   "DSB SY\n\t"
+            "mrs %0, cntvct_el0\n\t"
+            "DSB SY" : "=r"(result)
+        );
         return result;
     }
     METRIC("DSB MRS DSB", tm_dsb_mrs_dsb);
@@ -157,9 +159,12 @@ namespace vi_mt
 
     inline count_t tm_isb_mrs_isb()
     {   count_t result;
-        asm volatile("ISB SY" ::: "memory");
-        asm volatile("mrs %0, cntvct_el0" : "=r"(result));
-        asm volatile("ISB SY" ::: "memory");
+        asm volatile
+        (   "ISB SY\n\t"
+            "mrs %0, cntvct_el0\n\t"
+            "ISB SY"
+            : "=r"(result)
+        );
         return result;
     }
     METRIC("ISB MRS ISB", tm_isb_mrs_isb);
