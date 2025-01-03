@@ -14,7 +14,7 @@
 #   if defined(_M_X64) || defined(_M_AMD64) // MS compiler for x64 or ARM64EC
 #       include <intrin.h>
 #       ifndef __clang__
-#           pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence, __readpmc)
+#           pragma intrinsic(__rdtsc, __rdtscp, _mm_lfence, _mm_sfence, _mm_mfence)
 #       endif
 #   elif defined(__x86_64__) || defined(__amd64__) // GNU on Intel
 #       include <x86intrin.h>
@@ -113,11 +113,6 @@ namespace vi_mt
 #elif __ARM_ARCH >= 8 // ARMv8 (RaspberryPi4)
 namespace vi_mt
 {
-	count_t tm_rdpmccntr64()
-	{	return __rdpmccntr64();
-	}
-	METRIC("__rdpmccntr64", tm_rdpmccntr64);
-
     inline count_t tm_mrs()
     {   count_t result;
         __asm__ __volatile__("mrs %0, cntvct_el0" : "=r"(result));
