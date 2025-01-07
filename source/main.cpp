@@ -429,7 +429,7 @@ namespace
 		for (const auto& m : data)
 		{
 			auto prn_sd = [](double f)
-				{	std::string result = "<err>";
+				{	std::string result = "<n/a>";
 					if (!std::isnan(f))
 					{	std::ostringstream os;
 						os << std::setprecision(1) << std::fixed << misc::round(f, 2);
@@ -440,9 +440,9 @@ namespace
 
 			str_out s =
 			{	m.name_,
-				(m.discreteness_ != .0? to_string(discreteness(m), 3): "n/a"),
-				(m.call_duration_ != .0? to_string(misc::duration_t{ m.call_duration_ }, 2): "n/a"),
-				(m.unit_ != .0? to_string(tick(m), 2): "n/a"),
+				(m.discreteness_ != .0? to_string(discreteness(m), 3): "<n/a>"),
+				(m.call_duration_ != .0? to_string(misc::duration_t{ m.call_duration_ }, 2): "<n/a>"),
+				(m.unit_ != .0? to_string(tick(m), 2): "<n/a>"),
 				m.type_,
 				prn_sd(m.discreteness_prec_),
 				prn_sd(m.duration_prec_),
@@ -508,14 +508,17 @@ namespace
 
 	template<typename I>
 	double percentage_standard_deviation(I begin, I end)
-	{
-		auto result = 0.0;
-		if (auto sum = std::accumulate(begin, end, 0.0))
-		{	result = std::accumulate(begin, end, 0.0, [](auto i, auto v) { return i + std::pow(v, 2.0); });
-			result *= static_cast<double>(std::distance(begin, end)) / std::pow(sum, 2.0);
-			result += std::numeric_limits<decltype(result)>::epsilon();
-			assert(result >= 1.0);
-			result = 100.0 * ((result > 1.0) ? std::sqrt(result - 1.0) : 0.0);
+	{	static_assert(std::numeric_limits<double>::has_quiet_NaN);
+		auto result = std::numeric_limits<double>::quiet_NaN();
+		if (std::distance(begin, end) > 1)
+		{
+			if (const auto sum = std::accumulate(begin, end, 0.0))
+			{	result = std::accumulate(begin, end, 0.0, [](auto i, auto v) { return i + std::pow(v, 2.0); });
+				result *= static_cast<double>(std::distance(begin, end)) / std::pow(sum, 2.0);
+				result += std::numeric_limits<decltype(result)>::epsilon();
+				assert(result >= 1.0);
+				result = 100.0 * ((result > 1.0) ? std::sqrt(result - 1.0) : 0.0);
+			}
 		}
 		return result;
 	}
@@ -580,23 +583,23 @@ namespace
 	}
 
 	std::pair<double, double> calc_stat(std::vector<double> data)
-	{	decltype(&calc_stat_median) calc_stat;
+	{	decltype(&calc_stat_median) calc;
 		switch (g_stat)
 		{	default:
 				assert(false);
 				[[fallthrough]];
 			case stat_t::median:
-				calc_stat = calc_stat_median;
+				calc = calc_stat_median;
 				break;
 			case stat_t::avg:
-				calc_stat = calc_stat_avg;
+				calc = calc_stat_avg;
 				break;
 			case stat_t::min:
-				calc_stat = calc_stat_min;
+				calc = calc_stat_min;
 				break;
 		}
 
-		return calc_stat(std::move(data));
+		return calc(std::move(data));
 	}
 
 	auto action(const cont2_t::value_type& pair)

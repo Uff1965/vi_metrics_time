@@ -40,6 +40,7 @@ namespace misc
 		progress_t& operator=(const progress_t&) = delete;
 	public:
 		explicit progress_t(std::string title) :title_{ std::move(title) } { print(.0); }
+		static_assert(std::numeric_limits<double>::has_quiet_NaN);
 		~progress_t() { print(std::numeric_limits<double>::quiet_NaN()); }
 		void operator()(double f) const { assert(.0 <= f); print(f); }
 	};
