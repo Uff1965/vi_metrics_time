@@ -190,6 +190,18 @@ namespace vi_mt
         return result;
     }
     METRIC("ISB MRS ISB", tm_isb_mrs_isb);
+
+    inline count_t tm_dsb_mrs_isb()
+    {   count_t result;
+        asm volatile
+        (   "DSB SY\n\t"
+            "mrs %0, cntvct_el0\n\t"
+            "ISB SY"
+            : "=r"(result)
+        );
+        return result;
+    }
+    METRIC("DSB MRS ISB", tm_isb_mrs_isb);
 // ^^^ With Instruction Synchronization Barrier
 }
 #else
