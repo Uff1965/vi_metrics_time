@@ -203,6 +203,22 @@ namespace vi_mt
     }
     METRIC("DSB MRS ISB", tm_isb_mrs_isb);
 // ^^^ With Instruction Synchronization Barrier
+
+// vvv From vi_timing
+	inline count_t vi_tmGetTicks(void) noexcept
+	{	count_t result;
+		asm volatile
+		(	// too slow: "dmb ish\n\t" // Ensure all previous memory accesses are complete before reading the timer
+			"isb\n\t" // Ensure the instruction stream is synchronized
+			"mrs %0, cntvct_el0\n\t" // Read the current value of the system timer
+			"isb\n\t" // Ensure the instruction stream is synchronized again
+			: "=r"(result) // Output operand: result will hold the current timer value
+			: // No input operands
+			: "memory" // Clobber memory to ensure the compiler does not reorder instructions
+		);
+		return result;
+	}
+// ^^^ From vi_timing
 }
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
