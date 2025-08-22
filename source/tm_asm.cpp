@@ -218,6 +218,7 @@ namespace vi_mt
 		);
 		return result;
 	}
+    METRIC("ISB MRS ISB MEM", tm_isb_mrs_isb);
 // ^^^ From vi_timing
 }
 #else
