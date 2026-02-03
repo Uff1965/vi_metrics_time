@@ -24,6 +24,7 @@ find_package(Boost 1.75 COMPONENTS "timer")
 
 ### Files #####################################################################
 set(FILE_GROUP
+  "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Linux>:tm_BCM2835.cpp>"
   "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Linux>:tm_linux.cpp>"
   "${VI_SOURCE_DIR}/$<$<PLATFORM_ID:Windows>:tm_wintel.cpp>"
   "${VI_SOURCE_DIR}/header.h"
