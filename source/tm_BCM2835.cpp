@@ -89,12 +89,13 @@ namespace vi_mt
 			return 0;
 		}
 
-		for (std::size_t i = 0; i < soc_addr_cells; ++i)
-		{	if (be32toh(words[i]) != 0)
-			{	assert(false);
-				return 0;
-			}
-		}
+		// Not valid for Raspberry Pi 1
+		//for (std::size_t i = 0; i < soc_addr_cells; ++i)
+		//{	if (be32toh(words[i]) != 0)
+		//	{	assert(false);
+		//		return 0;
+		//	}
+		//}
 
 		if (parent_addr_cells == 1)
 		{	return be32toh(words[soc_addr_cells]);
