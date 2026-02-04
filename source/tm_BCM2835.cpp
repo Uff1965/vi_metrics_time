@@ -20,7 +20,7 @@
 
 #define METRIC(title, ...) TM_METRIC(("<LNX>::" title), __VA_ARGS__)
 
-namespace
+namespace vi_mt
 {
 	using be32_t = std::uint32_t;
 	static_assert(sizeof(be32_t) == 4);
@@ -140,8 +140,9 @@ namespace
 		return nullptr;
 	}
 
-	vi_mt::count_t tm_SystemTimer_by_DevMem()
-	{	if (static auto const timer_base = map_system_timer())
+	count_t tm_SystemTimer_by_DevMem()
+	{	static auto const timer_base = map_system_timer();
+		if (timer_base)
 		{	const auto chi_check = timer_base[2];
 			auto clo = timer_base[1]; // Timer low 32 bits
 			const auto chi = timer_base[2]; // Timer high 32 bits
@@ -154,5 +155,5 @@ namespace
 	}
 	METRIC("SystemTimer_by_DevMem", tm_SystemTimer_by_DevMem);
 
-} // namespace
+} // namespace vi_mt
 #endif // #if __ARM_ARCH >= 6
