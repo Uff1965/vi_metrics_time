@@ -201,11 +201,9 @@ namespace vi_mt
         );
         return result;
     }
-    METRIC("DSB MRS ISB", tm_isb_mrs_isb);
-// ^^^ With Instruction Synchronization Barrier
+    METRIC("DSB MRS ISB", tm_dsb_mrs_isb);
 
-// vvv From vi_timing
-	inline count_t vi_tmGetTicks(void) noexcept
+	inline count_t tm_isb_mrs_isb_mem(void) noexcept
 	{	count_t result;
 		asm volatile
 		(	// too slow: "dmb ish\n\t" // Ensure all previous memory accesses are complete before reading the timer
@@ -218,8 +216,8 @@ namespace vi_mt
 		);
 		return result;
 	}
-    METRIC("ISB MRS ISB MEM", tm_isb_mrs_isb);
-// ^^^ From vi_timing
+    METRIC("ISB MRS ISB MEM", tm_isb_mrs_isb_mem);
+// ^^^ With Instruction Synchronization Barrier
 }
 #else
 //#   ERROR: You need to define function(s) for your OS and CPU
