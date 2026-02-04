@@ -126,19 +126,21 @@ namespace
 			return nullptr;
 		}
 
-		constexpr off_t TIMER_OFFSET = 0x3000; // System Timer offset от peripheral base
+		constexpr off_t TIMER_OFFSET = 0x3000; // System Timer offset from peripheral base
 		const auto timer_phys = static_cast<off_t>(periph_base + TIMER_OFFSET);
 		const off_t page_base = timer_phys & ~(static_cast<off_t>(page_size) - 1);
 
-		const std::uint8_t *mapped = mmap(nullptr, page_size, PROT_READ, MAP_SHARED, fd, page_base);
+		auto const raw = mmap(nullptr, page_size, PROT_READ, MAP_SHARED, fd, page_base);
 		close(fd);
 
-		return mapped != MAP_FAILED ?
-			reinterpret_cast<const volatile be32_t*>(mapped + (timer_phys - page_base)) :
-			nullptr;
+		if (MAP_FAILED != raw)
+		{	const std::uint8_t *mapped = static_cast<const std::uint8_t *>(raw);
+			return reinterpret_cast<const volatile be32_t *>(mapped + (timer_phys - page_base));
+		}
+		return nullptr;
 	}
 
-	count_t tm_SystemTimer_by_DevMem()
+	vi_mt::count_t tm_SystemTimer_by_DevMem()
 	{	if (static auto const timer_base = map_system_timer())
 		{	const auto chi_check = timer_base[2];
 			auto clo = timer_base[1]; // Timer low 32 bits
