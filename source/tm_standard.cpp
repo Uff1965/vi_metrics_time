@@ -3,19 +3,19 @@
 
 #include "header.h"
 
-#include <time.h>
+#include <ctime>
 
 #define METRIC_C(title, ...) TM_METRIC(("<C>  ::" title), __VA_ARGS__)
 #define METRIC_CPP(title, ...) TM_METRIC(("<C++>::" title), __VA_ARGS__)
 
 namespace vi_mt
 {
-	METRIC_C("time()", time, nullptr);
-	METRIC_C("clock()", clock);
+	METRIC_C("time()", std::time, nullptr);
+	METRIC_C("clock()", std::clock);
 
 	count_t tm_timespec_get()
-	{	struct timespec ts;
-		timespec_get(&ts, TIME_UTC);
+	{	std::timespec ts;
+		std::timespec_get(&ts, TIME_UTC);
 		return 1'000'000'000ULL * ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC_C("timespec_get(TIME_UTC)", tm_timespec_get);
