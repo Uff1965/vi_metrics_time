@@ -125,7 +125,7 @@ namespace vi_mt
 	inline count_t tm_dsb_mrs()
 	{	count_t result;
 		asm volatile
-			(	"dsb\n\t"
+			(	"dsb sy\n\t"
 				"mrs %0, cntvct_el0"
 			:	"=r"(result)
 			:
@@ -151,9 +151,9 @@ namespace vi_mt
 	inline count_t tm_dsb_mrs_dsb()
 	{	count_t result;
 		asm volatile
-			(	"dsb\n\t"
+			(	"dsb sy\n\t"
 				"mrs %0, cntvct_el0\n\t"
-				"dsb"
+				"dsb sy"
 			:	"=r"(result)
 			:
 			:	"memory"
@@ -207,7 +207,7 @@ namespace vi_mt
 	inline count_t tm_dsb_mrs_isb()
 	{	count_t result;
 		asm volatile
-			(	"dsb\n\t"
+			(	"dsb sy\n\t"
 				"mrs %0, cntvct_el0\n\t"
 				"isb"
 			:	"=r"(result)
