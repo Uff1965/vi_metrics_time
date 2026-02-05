@@ -29,7 +29,7 @@
 #define METRIC_EX(title) \
 static constexpr char chSTR4(title_, __LINE__)[] = "<LNX>::" title; \
 static count_t chSTR4(func_, __LINE__)(); \
-template class vi_mt::metric_t<chSTR4(title_, __LINE__), __VA_ARGS__>; \
+template class vi_mt::metric_t<chSTR4(title_, __LINE__), chSTR4(func_, __LINE__)>; \
 count_t chSTR4(func_, __LINE__)()
 
 namespace
