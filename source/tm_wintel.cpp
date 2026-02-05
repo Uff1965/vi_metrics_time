@@ -6,7 +6,7 @@
 #include <bit>
 
 #ifndef _WIN32
-#	error "This functions for Windows only!"
+#	error "These functions are for Windows only!"
 #endif
 
 #define WIN32_LEAN_AND_MEAN
@@ -23,7 +23,9 @@ namespace
 	}
 
 	inline vi_mt::count_t to_count(SYSTEMTIME st) noexcept
-	{	return st.wMilliseconds + 1'000UL * (st.wSecond + 60UL * (st.wMinute + 60UL * (st.wHour + 24UL * st.wDay)));
+	{	static_assert(sizeof(long long) >= 8);
+		// Only for *intra-day* duration measurements (not monotonic across midnight or month boundaries)
+		return st.wMilliseconds + 1'000ULL * (st.wSecond + 60ULL * (st.wMinute + 60ULL * st.wHour));
 	}
 }
 
@@ -183,7 +185,7 @@ namespace vi_mt
 	METRIC("GetLocalTime()", tm_GetLocalTime);
 
 	count_t tm_timeGetSystemTime()
-	{	MMTIME mmt; // The function retrieves the system time, in milliseconds.
+	{	MMTIME mmt{ .wType = TIME_MS }; // The function retrieves the system time, in milliseconds.
 		::timeGetSystemTime(&mmt, sizeof(mmt));
 		return mmt.u.ms;
 	}
