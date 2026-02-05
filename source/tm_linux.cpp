@@ -34,11 +34,11 @@ count_t chSTR4(func_, __LINE__)()
 
 namespace vi_mt
 {
-//		METRIC_EX("/dev/rtc")
-		static constexpr char chSTR4(title_, 40)[] = "<LNX>::" "/dev/rtc";
-		static count_t chSTR4(func_, 40)();
-		template class vi_mt::metric_t<chSTR4(title_, 40), chSTR4(func_, 40)>;
-		count_t chSTR4(func_, 40)()
+		METRIC_EX("/dev/rtc")
+		//static constexpr char chSTR4(title_, 40)[] = "<LNX>::" "/dev/rtc";
+		//static count_t chSTR4(func_, 40)();
+		//template class vi_mt::metric_t<chSTR4(title_, 40), chSTR4(func_, 40)>;
+		//count_t chSTR4(func_, 40)()
 		{	int fd = ::open("/dev/rtc", O_RDONLY);
 			if (fd < 0)
 			{	return 0;
