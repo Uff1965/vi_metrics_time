@@ -29,14 +29,14 @@ vi_rdtsc_asm PROC
 	rdtsc
 	shl	rdx, 32
 	or	rax, rdx
-	ret	0
+	ret
 vi_rdtsc_asm ENDP
 
 vi_rdtscp_asm PROC
 	rdtscp
 	shl	rdx, 32
 	or	rax, rdx
-	ret	0
+	ret
 vi_rdtscp_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -63,7 +63,7 @@ vi_cpuid_rdtsc_asm PROC
 	or	rax, rdx
 
 	pop	rbx
-	ret	0
+	ret
 vi_cpuid_rdtsc_asm ENDP
 
 vi_rdtscp_cpuid_asm PROC
@@ -80,7 +80,7 @@ vi_rdtscp_cpuid_asm PROC
 	mov	rax, r8
 
 	pop	rbx
-	ret	0
+	ret
 vi_rdtscp_cpuid_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -112,7 +112,7 @@ vi_lfence_rdtsc_asm PROC
 	rdtsc
 	shl	rdx, 32
 	or	rax, rdx
-	ret	0
+	ret
 vi_lfence_rdtsc_asm ENDP
 
 vi_mfence_lfence_rdtsc_asm PROC
@@ -121,7 +121,7 @@ vi_mfence_lfence_rdtsc_asm PROC
 	rdtsc
 	shl	rdx, 32
 	or	rax, rdx
-	ret	0
+	ret
 vi_mfence_lfence_rdtsc_asm ENDP
 
 vi_rdtscp_lfence_asm PROC
@@ -129,7 +129,7 @@ vi_rdtscp_lfence_asm PROC
 	shl	rdx, 32
 	or	rax, rdx
 	lfence
-	ret	0
+	ret
 vi_rdtscp_lfence_asm ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -142,7 +142,7 @@ vi_rdtscp_lfence_asm ENDP
 ;	rdpmc
 ;	shl	rdx, 32
 ;	or	rax, rdx
-;	ret	0
+;	ret
 ;vi_asm_rdpmc_instructions ENDP
 ;
 ;vi_asm_rdpmc_actual_cycles PROC
@@ -152,7 +152,7 @@ vi_rdtscp_lfence_asm ENDP
 ;   __asm__ __volatile__("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
 ;
 ;   return (a | (d << 32));
-;	ret	0
+;	ret
 ;vi_asm_rdpmc_actual_cycles ENDP
 ;
 ;vi_asm_rdpmc_reference_cycles PROC
@@ -162,7 +162,7 @@ vi_rdtscp_lfence_asm ENDP
 ;   __asm__ __volatile__("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
 ;
 ;   return (a | (d << 32));
-;	ret	0
+;	ret
 ;vi_asm_rdpmc_reference_cycles ENDP
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
