@@ -208,7 +208,7 @@ namespace vi_mt
 	}
 
 	template<const char* Name, auto Func, auto... Args>
-	inline item_t metric_t<Name, Func, Args...>::measurement(const std::function<void(double)>& progress) const
+	inline item_t metric_t<Name, Func, Args...>::measurement(const std::function<void(double)>& _progress) const
 	{	misc::warming(false, misc::g_warming, true);
 		item_t result;
 
@@ -220,6 +220,7 @@ namespace vi_mt
 				}
 				return tick > tick_s;
 			}();
+		auto progress = _progress ? _progress : [](double) {};
 		progress(1.0 / 6.);
 
 		if (ok)
@@ -240,7 +241,7 @@ namespace vi_mt
 } // namespace vi_mt
 
 #define TM_METRIC(title, ...) \
-static const char chSTR4(title_, __LINE__)[] = title; \
+static constexpr char chSTR4(title_, __LINE__)[] = title; \
 template class vi_mt::metric_t<chSTR4(title_, __LINE__), __VA_ARGS__>;
 
 //-V:assert:2570,2528

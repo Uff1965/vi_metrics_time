@@ -85,7 +85,7 @@ namespace
 		else if ("type"sv == ptr)
 			result = sort_t::type;
 		else
-		{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+		{	std::cerr << "ERROR: Wrong value for parameter --" << name << ": \'" << ptr << "\'\n";
 			std::exit(1);
 		}
 
@@ -103,7 +103,7 @@ namespace
 		else if ("median"sv == ptr)
 			result = stat_t::median;
 		else
-		{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+		{	std::cerr << "ERROR: Wrong value for parameter --" << name << ": \'" << ptr << "\'\n";
 			std::exit(1);
 		}
 
@@ -115,7 +115,7 @@ namespace
 	{	return std::stoul(ptr);
 	}
 	catch (...)
-	{	std::cerr << "ERROR: Wrong value for parametr --" << name << ": \'" << ptr << "\'\n";
+	{	std::cerr << "ERROR: Wrong value for parameter --" << name << ": \'" << ptr << "\'\n";
 		std::exit(1);
 	}
 
@@ -145,7 +145,7 @@ namespace
 			}
 			else if ("-i"sv == ptr || "--include"sv == ptr)
 			{	if (n >= argc || argv[n][0] == '-')
-				{	std::cerr << "ERROR: Empty value for parametr --include\n";
+				{	std::cerr << "ERROR: Empty value for parameter --include\n";
 					std::exit(1);
 				}
 
@@ -153,7 +153,7 @@ namespace
 			}
 			else if ("-e"sv == ptr || "--exclude"sv == ptr)
 			{	if (n >= argc || argv[n][0] == '-')
-				{	std::cerr << "ERROR: Empty value for parametr --exclude\n";
+				{	std::cerr << "ERROR: Empty value for parameter --exclude\n";
 					std::exit(1);
 				}
 
@@ -318,7 +318,7 @@ namespace
 	{
 		struct space_out_t : std::numpunct<char>
 		{	char do_thousands_sep() const override { return '\''; }  // separate with apostrophe
-			std::string do_grouping() const override { return "\3"; } // groups of 3 digit
+			std::string do_grouping() const override { return "\3"; } // groups of 3 digits
 		};
 	public:
 		explicit locale_with_grouping(const std::locale& loc) : std::locale(loc, new space_out_t) {}
@@ -680,7 +680,8 @@ vi_mt::raw_t vi_mt::metric_base_t::action(const std::function<bool(std::string_v
 	else
 	{	v = s_measurers_;
 	}
-	std::shuffle(v.begin(), v.end(), std::mt19937{ std::random_device{}() });
+	static thread_local std::mt19937 rng{ std::random_device{}() };
+	std::shuffle(v.begin(), v.end(), rng);
 
 	raw_t result;
 	for (std::size_t n = 0; n < v.size(); ++n)

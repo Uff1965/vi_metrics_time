@@ -89,14 +89,15 @@ namespace misc
 
 	private:
 		constexpr static size_type N = to_underlying(key_type::_quantity);
-		constexpr static bool index_check(size_type index) noexcept { return index >= 0 && index < N; }
+		constexpr static bool index_check(size_type index) noexcept { return index < N; }
 		mapped_type data_[N];
 
 	}; // class emap_t
 
 	template<typename Key, typename... Args>
 	[[nodiscard]] constexpr auto make_emap( Args&&... args)
-	{	using T = std::common_type_t<Args...>;
+	{	static_assert(sizeof...(Args) > 0, "make_emap requires at least one argument");
+		using T = std::common_type_t<Args...>;
 		return emap_t<Key, T>{ std::initializer_list<T>{std::forward<Args>(args)...} };
 	}
 
