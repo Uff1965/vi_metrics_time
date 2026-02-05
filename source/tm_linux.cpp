@@ -32,9 +32,9 @@ static count_t chSTR4(func_, __LINE__)(); \
 template class vi_mt::metric_t<chSTR4(title_, __LINE__), chSTR4(func_, __LINE__)>; \
 count_t chSTR4(func_, __LINE__)()
 
-namespace
+namespace vi_mt
 {
-	namespace vi_mt
+	namespace
 	{
 		METRIC_EX("/dev/rtc")
 		{
