@@ -14,13 +14,69 @@
 #include <sys/times.h> // for times
 #include <sys/resource.h> // for getrusage
 
+#define _GNU_SOURCE
+#include <fcntl.h>
+#include <linux/perf_event.h>
+#include <linux/rtc.h>
+#include <stdint.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+
 #define METRIC(title, ...) TM_METRIC(("<LNX>::" title), __VA_ARGS__)
+
+#define METRIC_EX(title) \
+static constexpr char chSTR4(title_, __LINE__)[] = "<LNX>::" title; \
+static count_t chSTR4(func_, __LINE__)(); \
+template class vi_mt::metric_t<chSTR4(title_, __LINE__), __VA_ARGS__>; \
+count_t chSTR4(func_, __LINE__)()
+
+namespace
+{
+	namespace vi_mt
+	{
+		METRIC_EX("/dev/rtc")
+		{
+			int fd = ::open("/dev/rtc", O_RDONLY);
+			if (fd < 0)
+			{	return 0;
+			}
+			struct rtc_time rt;
+			if (ioctl(fd, RTC_RD_TIME, &rt) < 0)
+			{	::close(fd);
+				return 0;
+			}
+			::close(fd);
+			return 60ULL * (60ULL * rt.tm_hour + rt.tm_min) + rt.tm_sec;
+		}
+
+		METRIC_EX("perf_event")
+		{	static perf_event_attr pe
+			{	.type = PERF_TYPE_SOFTWARE,
+				.size = sizeof(pe),
+				.config = PERF_COUNT_SW_TASK_CLOCK
+			};
+			int fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
+			if (fd == -1)
+			{	return 0;
+			}
+			uint64_t result = 0;
+			ssize_t r = read(fd, &result, sizeof(result));
+			if (r != sizeof(result))
+			{	close(fd);
+				return 0;
+			}
+			close(fd);
+			return result;
+		}
+	}
+}
 
 namespace vi_mt
 {
 	count_t tm_gettimeofday()
-	{
-		struct timeval tv;
+	{	timeval tv;
 		::gettimeofday(&tv, NULL);
 		return 1'000'000ULL * tv.tv_sec + tv.tv_usec;
 	}
@@ -28,8 +84,7 @@ namespace vi_mt
 
 
 	count_t tm_times()
-	{
-		struct tms tm;
+	{	tms tm;
 		::times(&tm);
 		return tm.tms_stime + tm.tms_utime;
 	}
@@ -38,80 +93,70 @@ namespace vi_mt
 
 
 	count_t tm_clock_gettime_CLOCK_REALTIME()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_REALTIME, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_REALTIME)", tm_clock_gettime_CLOCK_REALTIME);
 
 	count_t tm_clock_gettime_CLOCK_REALTIME_COARSE()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_REALTIME_COARSE, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_REALTIME_COARSE)", tm_clock_gettime_CLOCK_REALTIME_COARSE);
 
 	//count_t tm_clock_gettime_CLOCK_REALTIME_ALARM()
-	//{
-	//	timespec ts;
+	//{	timespec ts;
 	//	::clock_gettime(CLOCK_REALTIME_ALARM, &ts);
 	//	return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	//}
 	//METRIC("clock_gettime(CLOCK_REALTIME_ALARM)", tm_clock_gettime_CLOCK_REALTIME_ALARM);
 
 	count_t tm_clock_gettime_CLOCK_MONOTONIC()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_MONOTONIC, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_MONOTONIC)", tm_clock_gettime_CLOCK_MONOTONIC);
 
 	count_t tm_clock_gettime_CLOCK_MONOTONIC_COARSE()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_MONOTONIC_COARSE)", tm_clock_gettime_CLOCK_MONOTONIC_COARSE);
 
 	count_t tm_clock_gettime_CLOCK_MONOTONIC_RAW()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_MONOTONIC_RAW , &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_MONOTONIC_RAW)", tm_clock_gettime_CLOCK_MONOTONIC_RAW);
 
 	count_t tm_clock_gettime_CLOCK_TAI()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_TAI, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_TAI)", tm_clock_gettime_CLOCK_TAI);
 
 	count_t tm_clock_gettime_CLOCK_BOOTTIME()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_BOOTTIME, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_BOOTTIME)", tm_clock_gettime_CLOCK_BOOTTIME);
 
 	count_t tm_clock_gettime_CLOCK_THREAD_CPUTIME_ID()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 	METRIC("clock_gettime(CLOCK_THREAD_CPUTIME_ID)", tm_clock_gettime_CLOCK_THREAD_CPUTIME_ID);
 
 	count_t tm_clock_gettime_CLOCK_PROCESS_CPUTIME_ID()
-	{
-		timespec ts;
+	{	timespec ts;
 		::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
