@@ -14,7 +14,7 @@
 #include <sys/times.h> // for times
 #include <sys/resource.h> // for getrusage
 
-#define _GNU_SOURCE
+//#define _GNU_SOURCE
 #include <fcntl.h>
 #include <linux/perf_event.h>
 #include <linux/rtc.h>
@@ -34,11 +34,12 @@ count_t chSTR4(func_, __LINE__)()
 
 namespace vi_mt
 {
-	namespace
-	{
-		METRIC_EX("/dev/rtc")
-		{
-			int fd = ::open("/dev/rtc", O_RDONLY);
+//		METRIC_EX("/dev/rtc")
+		static constexpr char chSTR4(title_, 40)[] = "<LNX>::" title;
+		static count_t chSTR4(func_, 40)();
+		template class vi_mt::metric_t<chSTR4(title_, 40), chSTR4(func_, 40)>;
+		count_t chSTR4(func_, 40)()
+		{	int fd = ::open("/dev/rtc", O_RDONLY);
 			if (fd < 0)
 			{	return 0;
 			}
@@ -70,7 +71,6 @@ namespace vi_mt
 			close(fd);
 			return result;
 		}
-	}
 }
 
 namespace vi_mt
