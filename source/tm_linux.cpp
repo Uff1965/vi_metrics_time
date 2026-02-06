@@ -24,17 +24,16 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#define METRIC(title, ...) TM_METRIC(("<LNX>::" title), __VA_ARGS__)
+#define METRIC_LNX(title, ...) TM_METRIC(("<LNX>::" title), __VA_ARGS__)
 
-#define METRIC_EX(title) \
-static constexpr char chSTR4(title_, __LINE__)[] = "<LNX>::" title; \
-static count_t chSTR4(func_, __LINE__)(); \
-template class vi_mt::metric_t<chSTR4(title_, __LINE__), chSTR4(func_, __LINE__)>; \
-count_t chSTR4(func_, __LINE__)()
+#define METRIC(title) \
+vi_mt::count_t chSTR4(func_, __LINE__)(); \
+METRIC_LNX(title, chSTR4(func_, __LINE__)); \
+vi_mt::count_t chSTR4(func_, __LINE__)()
 
-namespace vi_mt
+namespace
 {
-	METRIC_EX("/dev/rtc")
+	METRIC("/dev/rtc")
 	{	int fd = ::open("/dev/rtc", O_RDONLY);
 		if (fd < 0)
 		{	return 0;
@@ -48,7 +47,7 @@ namespace vi_mt
 		return 60ULL * (60ULL * rt.tm_hour + rt.tm_min) + rt.tm_sec;
 	}
 
-	METRIC_EX("perf_event")
+	METRIC("perf_event")
 	{	static perf_event_attr pe
 		{	.type = PERF_TYPE_SOFTWARE,
 			.size = sizeof(pe),
@@ -68,90 +67,89 @@ namespace vi_mt
 		return result;
 	}
 
-	METRIC_EX("gettimeofday()")
+	METRIC("gettimeofday()")
 	{	timeval tv;
 		::gettimeofday(&tv, NULL);
 		return 1'000'000ULL * tv.tv_sec + tv.tv_usec;
 	}
 
+	METRIC_LNX("times(nullptr)", ::times, nullptr);
 
-	METRIC_EX("times(tms)")
+	METRIC("times(tms)")
 	{	tms tm;
 		::times(&tm);
 		return tm.tms_stime + tm.tms_utime;
 	}
-	METRIC("times(nullptr)", ::times, nullptr);
 
-
-	METRIC_EX("clock_gettime(CLOCK_REALTIME)")
+	METRIC("clock_gettime(CLOCK_REALTIME)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_REALTIME, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_REALTIME_COARSE)")
+	METRIC("clock_gettime(CLOCK_REALTIME_COARSE)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_REALTIME_COARSE, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	//METRIC_EX("clock_gettime(CLOCK_REALTIME_ALARM)")
+	//METRIC("clock_gettime(CLOCK_REALTIME_ALARM)")
 	//{	timespec ts;
 	//	::clock_gettime(CLOCK_REALTIME_ALARM, &ts);
 	//	return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	//}
 
-	METRIC_EX("clock_gettime(CLOCK_MONOTONIC)")
+	METRIC("clock_gettime(CLOCK_MONOTONIC)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_MONOTONIC, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_MONOTONIC_COARSE)")
+	METRIC("clock_gettime(CLOCK_MONOTONIC_COARSE)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_MONOTONIC_RAW)")
+	METRIC("clock_gettime(CLOCK_MONOTONIC_RAW)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_MONOTONIC_RAW , &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_TAI)")
+	METRIC("clock_gettime(CLOCK_TAI)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_TAI, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_BOOTTIME)")
+	METRIC("clock_gettime(CLOCK_BOOTTIME)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_BOOTTIME, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_THREAD_CPUTIME_ID)")
+	METRIC("clock_gettime(CLOCK_THREAD_CPUTIME_ID)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("clock_gettime(CLOCK_PROCESS_CPUTIME_ID)")
+	METRIC("clock_gettime(CLOCK_PROCESS_CPUTIME_ID)")
 	{	timespec ts;
 		::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
 		return 1'000'000'000ULL*ts.tv_sec + ts.tv_nsec;
 	}
 
-	METRIC_EX("getrusage(RUSAGE_SELF)")
+	METRIC("getrusage(RUSAGE_SELF)")
 	{	rusage ru;
 		::getrusage(RUSAGE_SELF, &ru);
 		return 1'000'000ULL * (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec) + ru.ru_utime.tv_usec + ru.ru_stime.tv_usec;
 	}
 
-	METRIC_EX("getrusage(RUSAGE_THREAD)")
+	METRIC("getrusage(RUSAGE_THREAD)")
 	{	rusage ru;
 		::getrusage(RUSAGE_THREAD, &ru);
 		return 1'000'000ULL * (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec) + ru.ru_utime.tv_usec + ru.ru_stime.tv_usec;
 	}
-} // namespace vi_mt
+} // namespace

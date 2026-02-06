@@ -6,21 +6,23 @@
 #include <boost/timer/timer.hpp>
 
 #define METRIC_BOOST(title, ...) TM_METRIC(("<BST>::" title), __VA_ARGS__)
+#define METRIC(title) \
+vi_mt::count_t chSTR4(func_, __LINE__)(); \
+METRIC_BOOST(title, chSTR4(func_, __LINE__)); \
+vi_mt::count_t chSTR4(func_, __LINE__)()
 
-namespace vi_mt
+namespace
 {
 	const boost::timer::cpu_timer timer;
 
-	count_t tm_boost_wall()
+	METRIC("cpu_timer.elapsed() wall")
 	{	return timer.elapsed().wall;
 	}
-	METRIC_BOOST("cpu_timer.elapsed() wall", tm_boost_wall);
 
-	count_t tm_boost_user_system()
+	METRIC("cpu_timer.elapsed() user + system")
 	{
 		const auto tp = timer.elapsed();
 		return tp.user + tp.system;
 	}
-	METRIC_BOOST("cpu_timer.elapsed() user + system", tm_boost_user_system);
 
-} // namespace vi_mt
+} // namespace
