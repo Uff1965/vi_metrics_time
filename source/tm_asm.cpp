@@ -31,53 +31,79 @@ namespace vi_mt
 	METRIC("LFENCE+RDTSC ASM", vi_lfence_rdtsc_asm);
 	METRIC("MFENCE+LFENCE+RDTSC ASM", vi_mfence_lfence_rdtsc_asm);
 
-	METRIC("RDTSC INTRINSIC", [] { return count_t(__rdtsc()); });
-	METRIC("RDTSCP INTRINSIC", [] { unsigned int _; return __rdtscp(&_); });
-	METRIC("LFENCE+RDTSC INTRINSIC", [] { _mm_lfence(); return __rdtsc(); });
-	METRIC("MFENCE+LFENCE+RDTSC INTRINSIC", []
-		{	_mm_mfence();
-			_mm_lfence();
-			return __rdtsc();
-		}
-	);
-	METRIC("RDTSCP+LFENCE INTRINSIC", []
-		{	uint32_t _;
-			const auto result = __rdtscp(&_);
-			_mm_lfence(); return result;
-		}
-	);
+	inline count_t tm_rdtsc()
+	{	return __rdtsc();
+	}
+	METRIC("RDTSC INTRINSIC", tm_rdtsc);
+
+	inline count_t tm_rdtscp()
+	{	unsigned int _;
+		return __rdtscp(&_);
+	}
+	METRIC("RDTSCP INTRINSIC", tm_rdtscp);
+
+	inline count_t vi_lfence_rdtsc()
+	{	_mm_lfence();
+		return __rdtsc();
+	}
+	METRIC("LFENCE+RDTSC INTRINSIC", vi_lfence_rdtsc);
+
+	inline count_t vi_mfence_lfence_rdtsc()
+	{	_mm_mfence();
+		_mm_lfence();
+		return __rdtsc();
+	}
+	METRIC("MFENCE+LFENCE+RDTSC INTRINSIC", vi_mfence_lfence_rdtsc);
+
+	inline count_t vi_rdtscp_lfence()
+	{	uint32_t _;
+		const auto result = __rdtscp(&_);
+		_mm_lfence();
+		return result;
+	}
+	METRIC("RDTSCP+LFENCE INTRINSIC", vi_rdtscp_lfence);
 
 #	if defined(_M_X64) || defined(_M_AMD64) // MSC for x64 or ARM64EC
-	METRIC("CPUID+RDTSC INTRINSIC", [] { int _[4]; __cpuid(_, 0); return __rdtsc(); });
-	METRIC("RDTSCP+CPUID INTRINSIC", []
-		{	unsigned int _;
-			const auto result = __rdtscp(&_);
-			int regs[4];
-			__cpuid(regs, 0);
-			return result;
-		}
-	);
+	inline count_t tm_cpuid_rdtsc()
+	{	int _[4];
+		__cpuid(_, 0);
+		return __rdtsc();
+	}
+	METRIC("CPUID+RDTSC INTRINSIC", tm_cpuid_rdtsc);
+
+	inline count_t tm_rdtscp_cpuid()
+	{	unsigned int _;
+		const auto result = __rdtscp(&_);
+		int regs[4];
+		__cpuid(regs, 0);
+		return result;
+	}
+	METRIC("RDTSCP+CPUID INTRINSIC", tm_rdtscp_cpuid);
 
 #		ifdef _KERNEL_MODE
 	// The intrinsic is available in kernel mode only, and the routine is only available as an intrinsic.
-	METRIC("READPMC INTRINSIC", __readpmc, 0UL);
+	inline count_t tm_readpmc_intrinsic()
+	{	const auto result = __readpmc(0UL);
+		return result;
+	}
+	METRIC("READPMC INTRINSIC", tm_readpmc_intrinsic);
 #		endif
 #	elif defined(__x86_64__) || defined(__amd64__) // GCC/CLANG for x64 or ARM64EC
 
-	METRIC("CPUID+RDTSC INTRINSIC", []
-		{	unsigned int _;
-			__cpuid(0, _, _, _, _);
-			return __rdtsc();
-		}
-	);
+	inline count_t tm_cpuid_rdtsc()
+	{	unsigned int _;
+		__cpuid(0, _, _, _, _);
+		return __rdtsc();
+	}
+	METRIC("CPUID+RDTSC INTRINSIC", tm_cpuid_rdtsc);
 
-	METRIC("RDTSCP+CPUID INTRINSIC", []
-		{	unsigned int _;
-			const auto result = __rdtscp(&_);
-			__cpuid(0, _, _, _, _);
-			return result;
-		}
-	);
+	inline count_t tm_rdtscp_cpuid()
+	{	unsigned int _;
+		const auto result = __rdtscp(&_);
+		__cpuid(0, _, _, _, _);
+		return result;
+	}
+	METRIC("RDTSCP+CPUID INTRINSIC", tm_rdtscp_cpuid);
 
 #	endif // GNU on Intel
 } // namespace vi_mt
@@ -85,26 +111,29 @@ namespace vi_mt
 #elif defined(__aarch64__) || (defined(__ARM_ARCH) && __ARM_ARCH >= 8) // ARMv8 (RaspberryPi4)
 namespace vi_mt
 {
-	METRIC("MRS", []
-		{	count_t result;
-			asm volatile("mrs %0, cntvct_el0": "=r"(result));
-			return result;
-		}
-	);
+	inline count_t tm_mrs()
+	{	count_t result;
+		asm volatile
+			(	"mrs %0, cntvct_el0"
+			:	"=r"(result)
+			);
+		return result;
+	}
+	METRIC("MRS", tm_mrs);
 
 	// vvv With Data Synchronization Barrier
-	METRIC("DSB+MRS+MEM", []
-		{	count_t result;
-			asm volatile
-				("dsb sy\n\t"
-				 "mrs %0, cntvct_el0"
-				: "=r"(result)
-				:
-				: "memory"
-				);
-			return result;
-		}
-	);
+	inline count_t tm_dsb_mrs()
+	{	count_t result;
+		asm volatile
+			(	"dsb sy\n\t"
+				"mrs %0, cntvct_el0"
+			:	"=r"(result)
+			:
+			:	"memory"
+			);
+		return result;
+	}
+	METRIC("DSB+MRS+MEM", tm_dsb_mrs);
 
 	inline count_t tm_mrs_dsb()
 	{	count_t result;
