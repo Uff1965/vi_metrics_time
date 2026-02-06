@@ -20,8 +20,7 @@ namespace vi_mt
 	}
 
 	METRIC("cpu_timer.elapsed() user + system")
-	{
-		const auto tp = timer.elapsed();
+	{	const auto tp = timer.elapsed();
 		return tp.user + tp.system;
 	}
 

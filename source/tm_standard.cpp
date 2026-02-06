@@ -11,18 +11,21 @@ namespace ch = std::chrono;
 #define METRIC_C(title, ...) TM_METRIC(("<C>  ::" title), __VA_ARGS__)
 #define METRIC_CPP(title, ...) TM_METRIC(("<C++>::" title), __VA_ARGS__)
 
+#define METRIC_CPP_EXT(title) \
+vi_mt::count_t chSTR4(func_, __LINE__)(); \
+METRIC_BOOST(title, chSTR4(func_, __LINE__)); \
+vi_mt::count_t chSTR4(func_, __LINE__)()
+
 namespace vi_mt
 {
 	METRIC_C("time()", std::time, nullptr);
 	METRIC_C("clock()", std::clock);
-	METRIC_C
-	(	"timespec_get(TIME_UTC)",
-		[]{
-			std::timespec ts;
-			std::timespec_get(&ts, TIME_UTC);
-			return 1'000'000'000ULL * ts.tv_sec + ts.tv_nsec;
-		}
-	);
+	count_t tm_timespec_get()
+	{	std::timespec ts;
+		std::timespec_get(&ts, TIME_UTC);
+		return 1'000'000'000ULL * ts.tv_sec + ts.tv_nsec;
+	}
+	METRIC_C("timespec_get(TIME_UTC)", tm_timespec_get);
 
 	METRIC_CPP("system_clock::now()", [] { return ch::system_clock::now().time_since_epoch().count(); });
 	METRIC_CPP("steady_clock::now()", [] { return ch::steady_clock::now().time_since_epoch().count(); });
