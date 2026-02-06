@@ -48,22 +48,23 @@ namespace vi_mt
 	}
 
 	METRIC("perf_event")
-	{	perf_event_attr pe
+	{	static perf_event_attr pe
 		{	.type = PERF_TYPE_SOFTWARE,
 			.size = sizeof(pe),
 			.config = PERF_COUNT_SW_TASK_CLOCK
 		};
-		int fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
+		static const int fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
 		if (fd == -1)
 		{	return 0;
 		}
 		uint64_t result = 0;
 		ssize_t r = read(fd, &result, sizeof(result));
 		if (r != sizeof(result))
-		{	close(fd);
+		{
+//			close(fd);
 			return 0;
 		}
-		close(fd);
+//		close(fd);
 		return result;
 	}
 
