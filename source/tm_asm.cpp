@@ -6,7 +6,12 @@
 // "RDTSCP versus RDTSC + CPUID" https://stackoverflow.com/questions/27693145/rdtscp-versus-rdtsc-cpuid
 // "Difference between rdtscp, rdtsc : memory and cpuid / rdtsc?" https://stackoverflow.com/questions/12631856/difference-between-rdtscp-rdtsc-memory-and-cpuid-rdtsc
 
-#define METRIC(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
+#define METRIC_ASM(title, ...) TM_METRIC(("<ASM>::" title), __VA_ARGS__)
+
+#define METRIC(title) \
+vi_mt::count_t chSTR4(func_, __LINE__)(); \
+METRIC_ASM(title, chSTR4(func_, __LINE__)); \
+vi_mt::count_t chSTR4(func_, __LINE__)()
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
 #	include "tm_masm_x64.h"
@@ -23,37 +28,37 @@
 
 namespace vi_mt
 {
-	METRIC("RDTSC ASM", vi_rdtsc_asm);
-	METRIC("RDTSCP ASM", vi_rdtscp_asm);
-	METRIC("CPUID+RDTSC ASM", vi_cpuid_rdtsc_asm);
-	METRIC("RDTSCP+CPUID ASM", vi_rdtscp_cpuid_asm);
-	METRIC("RDTSCP+LFENCE ASM", vi_rdtscp_lfence_asm);
-	METRIC("LFENCE+RDTSC ASM", vi_lfence_rdtsc_asm);
-	METRIC("MFENCE+LFENCE+RDTSC ASM", vi_mfence_lfence_rdtsc_asm);
+	METRIC_ASM("RDTSC ASM", vi_rdtsc_asm);
+	METRIC_ASM("RDTSCP ASM", vi_rdtscp_asm);
+	METRIC_ASM("CPUID+RDTSC ASM", vi_cpuid_rdtsc_asm);
+	METRIC_ASM("RDTSCP+CPUID ASM", vi_rdtscp_cpuid_asm);
+	METRIC_ASM("RDTSCP+LFENCE ASM", vi_rdtscp_lfence_asm);
+	METRIC_ASM("LFENCE+RDTSC ASM", vi_lfence_rdtsc_asm);
+	METRIC_ASM("MFENCE+LFENCE+RDTSC ASM", vi_mfence_lfence_rdtsc_asm);
 
 	inline count_t tm_rdtsc()
 	{	return __rdtsc();
 	}
-	METRIC("RDTSC INTRINSIC", tm_rdtsc);
+	METRIC_ASM("RDTSC INTRINSIC", tm_rdtsc);
 
 	inline count_t tm_rdtscp()
 	{	unsigned int _;
 		return __rdtscp(&_);
 	}
-	METRIC("RDTSCP INTRINSIC", tm_rdtscp);
+	METRIC_ASM("RDTSCP INTRINSIC", tm_rdtscp);
 
 	inline count_t vi_lfence_rdtsc()
 	{	_mm_lfence();
 		return __rdtsc();
 	}
-	METRIC("LFENCE+RDTSC INTRINSIC", vi_lfence_rdtsc);
+	METRIC_ASM("LFENCE+RDTSC INTRINSIC", vi_lfence_rdtsc);
 
 	inline count_t vi_mfence_lfence_rdtsc()
 	{	_mm_mfence();
 		_mm_lfence();
 		return __rdtsc();
 	}
-	METRIC("MFENCE+LFENCE+RDTSC INTRINSIC", vi_mfence_lfence_rdtsc);
+	METRIC_ASM("MFENCE+LFENCE+RDTSC INTRINSIC", vi_mfence_lfence_rdtsc);
 
 	inline count_t vi_rdtscp_lfence()
 	{	uint32_t _;
@@ -61,7 +66,7 @@ namespace vi_mt
 		_mm_lfence();
 		return result;
 	}
-	METRIC("RDTSCP+LFENCE INTRINSIC", vi_rdtscp_lfence);
+	METRIC_ASM("RDTSCP+LFENCE INTRINSIC", vi_rdtscp_lfence);
 
 #	if defined(_M_X64) || defined(_M_AMD64) // MSC for x64 or ARM64EC
 	inline count_t tm_cpuid_rdtsc()
@@ -69,7 +74,7 @@ namespace vi_mt
 		__cpuid(_, 0);
 		return __rdtsc();
 	}
-	METRIC("CPUID+RDTSC INTRINSIC", tm_cpuid_rdtsc);
+	METRIC_ASM("CPUID+RDTSC INTRINSIC", tm_cpuid_rdtsc);
 
 	inline count_t tm_rdtscp_cpuid()
 	{	unsigned int _;
@@ -78,7 +83,7 @@ namespace vi_mt
 		__cpuid(regs, 0);
 		return result;
 	}
-	METRIC("RDTSCP+CPUID INTRINSIC", tm_rdtscp_cpuid);
+	METRIC_ASM("RDTSCP+CPUID INTRINSIC", tm_rdtscp_cpuid);
 
 #		ifdef _KERNEL_MODE
 	// The intrinsic is available in kernel mode only, and the routine is only available as an intrinsic.
@@ -86,7 +91,7 @@ namespace vi_mt
 	{	const auto result = __readpmc(0UL);
 		return result;
 	}
-	METRIC("READPMC INTRINSIC", tm_readpmc_intrinsic);
+	METRIC_ASM("READPMC INTRINSIC", tm_readpmc_intrinsic);
 #		endif
 #	elif defined(__x86_64__) || defined(__amd64__) // GCC/CLANG for x64 or ARM64EC
 
@@ -95,7 +100,7 @@ namespace vi_mt
 		__cpuid(0, _, _, _, _);
 		return __rdtsc();
 	}
-	METRIC("CPUID+RDTSC INTRINSIC", tm_cpuid_rdtsc);
+	METRIC_ASM("CPUID+RDTSC INTRINSIC", tm_cpuid_rdtsc);
 
 	inline count_t tm_rdtscp_cpuid()
 	{	unsigned int _;
@@ -103,7 +108,7 @@ namespace vi_mt
 		__cpuid(0, _, _, _, _);
 		return result;
 	}
-	METRIC("RDTSCP+CPUID INTRINSIC", tm_rdtscp_cpuid);
+	METRIC_ASM("RDTSCP+CPUID INTRINSIC", tm_rdtscp_cpuid);
 
 #	endif // GNU on Intel
 } // namespace vi_mt
@@ -119,7 +124,39 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("MRS", tm_mrs);
+	METRIC_ASM("MRS", tm_mrs);
+
+	METRIC("MRS_")
+	{	count_t result;
+		asm volatile
+			(	"mrs %0, cntvct_el0"
+			:	"=r"(result)
+			);
+		return result;
+	}
+
+	inline count_t tm_mrs_mem()
+	{	count_t result;
+		asm volatile
+			(	"mrs %0, cntvct_el0"
+			:	"=r"(result)
+			:
+			: "memory"
+			);
+		return result;
+	}
+	METRIC_ASM("MRS+MEM", tm_mrs);
+
+	METRIC("MRS+MEM_")
+	{	count_t result;
+		asm volatile
+			(	"mrs %0, cntvct_el0"
+			:	"=r"(result)
+			:
+			: "memory"
+			);
+		return result;
+	}
 
 	// vvv With Data Synchronization Barrier
 	inline count_t tm_dsb_mrs()
@@ -133,7 +170,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("DSB+MRS+MEM", tm_dsb_mrs);
+	METRIC_ASM("DSB+MRS+MEM", tm_dsb_mrs);
 
 	inline count_t tm_mrs_dsb()
 	{	count_t result;
@@ -146,7 +183,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("MRS+DSB+MEM", tm_mrs_dsb);
+	METRIC_ASM("MRS+DSB+MEM", tm_mrs_dsb);
 
 	inline count_t tm_dsb_mrs_dsb()
 	{	count_t result;
@@ -160,7 +197,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("DSB+MRS+DSB+MEM", tm_dsb_mrs_dsb);
+	METRIC_ASM("DSB+MRS+DSB+MEM", tm_dsb_mrs_dsb);
 	// ^^^ With Data Synchronization Barrier
 
 	// vvv With Instruction Synchronization Barrier
@@ -175,7 +212,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("ISB+MRS+MEM", tm_isb_mrs);
+	METRIC_ASM("ISB+MRS+MEM", tm_isb_mrs);
 
 	inline count_t tm_mrs_isb()
 	{	count_t result;
@@ -188,7 +225,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("MRS+ISB+MEM", tm_mrs_isb);
+	METRIC_ASM("MRS+ISB+MEM", tm_mrs_isb);
 
 	inline count_t tm_isb_mrs_isb()
 	{	count_t result;
@@ -202,7 +239,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("ISB+MRS+ISB+MEM", tm_isb_mrs_isb);
+	METRIC_ASM("ISB+MRS+ISB+MEM", tm_isb_mrs_isb);
 
 	inline count_t tm_dsb_mrs_isb()
 	{	count_t result;
@@ -216,7 +253,7 @@ namespace vi_mt
 			);
 		return result;
 	}
-	METRIC("DSB+MRS+ISB+MEM", tm_dsb_mrs_isb);
+	METRIC_ASM("DSB+MRS+ISB+MEM", tm_dsb_mrs_isb);
 	// ^^^ With Instruction Synchronization Barrier
 } // namespace vi_mt
 #else
