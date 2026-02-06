@@ -9,7 +9,7 @@ This repository was created for educational and experimental purposes. The code 
 - Complex or non‑idiomatic solutions introduced for exploration rather than clarity.  
 - Limited error handling, incomplete validation, and minimal hardening for production use.
 
-Usage: vi_metrics_time [OPTIONS]
+### Usage: vi_metrics_time [OPTIONS]
 
   -h, --help                 Show this help and exit
   -w, --warming[=1|0]        Warmup before measurement (default: 1; implicit: OFF)
