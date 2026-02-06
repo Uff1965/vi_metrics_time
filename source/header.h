@@ -242,7 +242,7 @@ namespace vi_mt
 
 #define TM_METRIC(title, ...) \
 static constexpr char chSTR4(title_, __LINE__)[] = title; \
-template class vi_mt::metric_t<chSTR4(title_, __LINE__), __VA_ARGS__>
+extern template class vi_mt::metric_t<chSTR4(title_, __LINE__), __VA_ARGS__>
 
 //-V:assert:2570,2528
 
