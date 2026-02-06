@@ -1,3 +1,5 @@
+# vi_metrics_time
+
 ### Warning about project purpose
 
 This repository was created for educational and experimental purposes. The code is intended as a learning playground and may include many prototypes, outdated fragments, and “dead” code. Solutions and approaches used here are not guaranteed to be optimal, may be overly complex, and should not be treated as production‑ready implementations.
