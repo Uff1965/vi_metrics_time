@@ -31,7 +31,7 @@ namespace vi_mt
 	METRIC("LFENCE+RDTSC ASM", vi_lfence_rdtsc_asm);
 	METRIC("MFENCE+LFENCE+RDTSC ASM", vi_mfence_lfence_rdtsc_asm);
 
-	METRIC("RDTSC INTRINSIC", [] { return __rdtsc(); });
+	METRIC("RDTSC INTRINSIC", [] { return count_t(__rdtsc()); });
 	METRIC("RDTSCP INTRINSIC", [] { unsigned int _; return __rdtscp(&_); });
 	METRIC("LFENCE+RDTSC INTRINSIC", [] { _mm_lfence(); return __rdtsc(); });
 	METRIC("MFENCE+LFENCE+RDTSC INTRINSIC", []
