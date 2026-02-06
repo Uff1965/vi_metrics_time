@@ -126,15 +126,6 @@ namespace vi_mt
 	}
 	METRIC_ASM("MRS", tm_mrs);
 
-	METRIC("MRS_")
-	{	count_t result;
-		asm volatile
-			(	"mrs %0, cntvct_el0"
-			:	"=r"(result)
-			);
-		return result;
-	}
-
 	inline count_t tm_mrs_mem()
 	{	count_t result;
 		asm volatile
@@ -146,6 +137,15 @@ namespace vi_mt
 		return result;
 	}
 	METRIC_ASM("MRS+MEM", tm_mrs);
+
+	METRIC("MRS_")
+	{	count_t result;
+		asm volatile
+			(	"mrs %0, cntvct_el0"
+			:	"=r"(result)
+			);
+		return result;
+	}
 
 	METRIC("MRS+MEM_")
 	{	count_t result;
@@ -257,5 +257,5 @@ namespace vi_mt
 	// ^^^ With Instruction Synchronization Barrier
 } // namespace vi_mt
 #else
-//#	ERROR: You need to define function(s) for your OS and CPU
+//	You need to define function(s) for your OS and CPU
 #endif

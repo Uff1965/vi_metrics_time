@@ -612,7 +612,9 @@ namespace
 		const auto uallw = calc_stat_median(itm.unit_of_allthreads_work_).first;
 		const auto usleep = calc_stat_median(itm.unit_of_sleeping_process_).first;
 
-		if (result.unit_ / uallw > 1.2)
+		if(result.unit_ == 0.0)
+			result.type_ = "<n/a>"s;
+		else if (result.unit_ / uallw > 1.2)
 			result.type_ = "Process"s; // The process-clock is affected by the load on all cores.
 		else if (usleep / result.unit_ > 1.2)
 			result.type_ = "Thread"s; // The thread-clock readings are affected only by the thread's load.
