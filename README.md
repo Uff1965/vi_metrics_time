@@ -17,8 +17,8 @@ This repository was created for educational and experimental purposes. The code 
 
 ```
 -h, --help                 Show this help and exit  
--w, --warming[=1|0]        Warmup before measurement (default: 1; implicit: OFF)  
--s, --sort <key>           Sort by name|resolution|duration|tick|type (default: name)  
+-w, --warming <N>        Warmup before measurement (default: 1000ms; implicit: OFF)  
+-s, --sort <key>           Sort by name|resolution|duration|tick|type (default: name; implicit - resolution)  
 -i, --include <name>       Include function name (repeatable)  
 -e, --exclude <name>       Exclude function name  
 -r, --repeat <N>           Number of measurements (default: 1; implicit: 5)  
