@@ -48,7 +48,7 @@ namespace vi_mt
 	}
 
 	METRIC("perf_event")
-	{	static perf_event_attr pe
+	{	perf_event_attr pe
 		{	.type = PERF_TYPE_SOFTWARE,
 			.size = sizeof(pe),
 			.config = PERF_COUNT_SW_TASK_CLOCK
