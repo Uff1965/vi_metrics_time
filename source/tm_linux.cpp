@@ -31,7 +31,7 @@ vi_mt::count_t chSTR4(func_, __LINE__)(); \
 METRIC_LNX(title, chSTR4(func_, __LINE__)); \
 vi_mt::count_t chSTR4(func_, __LINE__)()
 
-namespace
+namespace vi_tm
 {
 	METRIC("/dev/rtc")
 	{	int fd = ::open("/dev/rtc", O_RDONLY);
@@ -152,4 +152,4 @@ namespace
 		::getrusage(RUSAGE_THREAD, &ru);
 		return 1'000'000ULL * (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec) + ru.ru_utime.tv_usec + ru.ru_stime.tv_usec;
 	}
-} // namespace
+} // namespace vi_tm

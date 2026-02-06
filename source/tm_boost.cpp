@@ -11,7 +11,7 @@ vi_mt::count_t chSTR4(func_, __LINE__)(); \
 METRIC_BOOST(title, chSTR4(func_, __LINE__)); \
 vi_mt::count_t chSTR4(func_, __LINE__)()
 
-namespace
+namespace vi_tm
 {
 	const boost::timer::cpu_timer timer;
 
@@ -25,4 +25,4 @@ namespace
 		return tp.user + tp.system;
 	}
 
-} // namespace
+} // namespace vi_tm

@@ -36,7 +36,7 @@ vi_mt::count_t chSTR4(func_, __LINE__)(); \
 METRIC_WIN(title, chSTR4(func_, __LINE__)); \
 vi_mt::count_t chSTR4(func_, __LINE__)()
 
-namespace
+namespace vi_tm
 {
 	METRIC_WIN("_time32()", _time32, nullptr);
 	METRIC_WIN("_time64()", _time64, nullptr);
@@ -175,4 +175,4 @@ namespace
 		::timeGetSystemTime(&mmt, sizeof(mmt));
 		return mmt.u.ms;
 	}
-} // namespace
+} // namespace vi_tm

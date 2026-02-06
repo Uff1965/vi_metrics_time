@@ -11,7 +11,7 @@ namespace ch = std::chrono;
 #define METRIC_C(title, ...) TM_METRIC(("<C>  ::" title), __VA_ARGS__)
 #define METRIC_CPP(title, ...) TM_METRIC(("<C++>::" title), __VA_ARGS__)
 
-namespace
+namespace vi_tm
 {
 	METRIC_C("time()", std::time, nullptr);
 	METRIC_C("clock()", std::clock);
@@ -30,4 +30,4 @@ namespace
 #ifndef NDEBUG
 	METRIC_CPP("tm_test_failed", [] { return 777; });
 #endif
-} // namespace
+} // namespace vi_tm
